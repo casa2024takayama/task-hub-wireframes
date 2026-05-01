@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>パーソナルタスクハブ - レポート ワイヤー</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+</style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<div class="max-w-3xl mx-auto px-4 py-6">
+
+  <!-- ヘッダー -->
+  <header class="flex items-center justify-between mb-4">
+    <div class="flex items-center gap-3">
+      <button class="text-slate-500 hover:text-slate-800 text-sm">← ダッシュボード</button>
+      <h1 class="text-xl font-bold text-slate-800">レポート</h1>
+    </div>
+  </header>
+
+  <!-- 期間切替 -->
+  <div class="bg-white rounded-lg border border-slate-200 p-1 inline-flex gap-1 mb-5 shadow-sm">
+    <button class="px-3 py-1.5 text-xs rounded bg-indigo-600 text-white">今週</button>
+    <button class="px-3 py-1.5 text-xs rounded text-slate-600 hover:bg-slate-100">先週</button>
+    <button class="px-3 py-1.5 text-xs rounded text-slate-600 hover:bg-slate-100">今月</button>
+    <button class="px-3 py-1.5 text-xs rounded text-slate-600 hover:bg-slate-100">先月</button>
+  </div>
+  <span class="ml-3 text-xs text-slate-500">2026/4/27 - 5/3</span>
+
+  <!-- ★ サマリーKPI -->
+  <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <div class="bg-white rounded-lg border border-slate-200 p-3 shadow-sm">
+      <div class="text-[10px] text-slate-500 uppercase tracking-wider">アクティブ</div>
+      <div class="text-2xl font-bold text-slate-800 mt-1">5</div>
+      <div class="text-[10px] text-slate-500">プロジェクト</div>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 p-3 shadow-sm">
+      <div class="text-[10px] text-slate-500 uppercase tracking-wider">完了タスク</div>
+      <div class="text-2xl font-bold text-emerald-600 mt-1">18</div>
+      <div class="text-[10px] text-slate-500">先週比 +3</div>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 p-3 shadow-sm">
+      <div class="text-[10px] text-slate-500 uppercase tracking-wider">受信箱処理</div>
+      <div class="text-2xl font-bold text-indigo-600 mt-1">12<span class="text-base text-slate-400">/15</span></div>
+      <div class="text-[10px] text-slate-500">未処理 3件</div>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 p-3 shadow-sm">
+      <div class="text-[10px] text-slate-500 uppercase tracking-wider">ルーチン実施</div>
+      <div class="text-2xl font-bold text-emerald-600 mt-1">80<span class="text-base text-slate-400">%</span></div>
+      <div class="text-[10px] text-slate-500">4/5 件</div>
+    </div>
+  </section>
+
+  <!-- ★ プロジェクト別 -->
+  <section class="mb-6">
+    <h2 class="text-sm font-bold text-slate-700 mb-3">プロジェクト別</h2>
+    <div class="bg-white rounded-lg border border-slate-200 divide-y divide-slate-100 shadow-sm">
+
+      <div class="p-3 flex items-center gap-3">
+        <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded">単発</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium text-slate-800 truncate">5月セミナー（外部）</div>
+          <div class="bg-slate-200 rounded-full h-1.5 mt-1.5">
+            <div class="bg-indigo-500 h-1.5 rounded-full" style="width: 38%"></div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-500 whitespace-nowrap">3 / 8</div>
+      </div>
+
+      <div class="p-3 flex items-center gap-3">
+        <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">週次</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium text-slate-800 truncate">X 投稿運用</div>
+          <div class="bg-slate-200 rounded-full h-1.5 mt-1.5">
+            <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 40%"></div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-500 whitespace-nowrap">2 / 5</div>
+      </div>
+
+      <div class="p-3 flex items-center gap-3">
+        <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded">単発</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium text-slate-800 truncate">コーポレートサイト改修</div>
+          <div class="bg-slate-200 rounded-full h-1.5 mt-1.5">
+            <div class="bg-indigo-500 h-1.5 rounded-full" style="width: 17%"></div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-500 whitespace-nowrap">1 / 6</div>
+      </div>
+
+      <div class="p-3 flex items-center gap-3">
+        <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">月次</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium text-slate-800 truncate">月次レポート作成</div>
+          <div class="bg-slate-200 rounded-full h-1.5 mt-1.5">
+            <div class="bg-slate-300 h-1.5 rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="text-xs text-rose-600 whitespace-nowrap">0 / 4 ⚠</div>
+      </div>
+
+      <div class="p-3 flex items-center gap-3">
+        <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded">単発</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium text-slate-800 truncate">社内勉強会 6月</div>
+          <div class="bg-slate-200 rounded-full h-1.5 mt-1.5">
+            <div class="bg-indigo-500 h-1.5 rounded-full" style="width: 22%"></div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-500 whitespace-nowrap">2 / 9</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ★ ルーチン実施履歴 -->
+  <section class="mb-6">
+    <h2 class="text-sm font-bold text-slate-700 mb-3">ルーチン実施</h2>
+    <div class="bg-white rounded-lg border border-slate-200 p-4 space-y-4 shadow-sm">
+
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-medium text-slate-800">X 投稿運用 <span class="text-xs text-slate-500 ml-1">週次</span></div>
+          <div class="text-xs text-emerald-600 font-medium">4 / 4 ✓</div>
+        </div>
+        <div class="flex gap-1.5">
+          <span class="w-7 h-7 bg-emerald-500 rounded text-white text-[10px] flex items-center justify-center" title="4週前">✓</span>
+          <span class="w-7 h-7 bg-emerald-500 rounded text-white text-[10px] flex items-center justify-center" title="3週前">✓</span>
+          <span class="w-7 h-7 bg-emerald-500 rounded text-white text-[10px] flex items-center justify-center" title="2週前">✓</span>
+          <span class="w-7 h-7 bg-emerald-500 rounded text-white text-[10px] flex items-center justify-center" title="先週">✓</span>
+          <span class="w-7 h-7 bg-amber-200 rounded text-amber-800 text-[10px] flex items-center justify-center" title="今週">…</span>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-100 pt-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-medium text-slate-800">月次レポート作成 <span class="text-xs text-slate-500 ml-1">月次</span></div>
+          <div class="text-xs text-rose-600 font-medium">0 / 1 ⚠ 未着手</div>
+        </div>
+        <div class="flex gap-1.5">
+          <span class="w-7 h-7 bg-emerald-500 rounded text-white text-[10px] flex items-center justify-center" title="2月">✓</span>
+          <span class="w-7 h-7 bg-emerald-500 rounded text-white text-[10px] flex items-center justify-center" title="3月">✓</span>
+          <span class="w-7 h-7 bg-emerald-500 rounded text-white text-[10px] flex items-center justify-center" title="4月">✓</span>
+          <span class="w-7 h-7 bg-rose-200 rounded text-rose-800 text-[10px] flex items-center justify-center" title="5月">…</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ★ 受信箱の流れ -->
+  <section class="mb-6">
+    <h2 class="text-sm font-bold text-slate-700 mb-3">受信箱の流れ</h2>
+    <div class="bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <div class="text-xl font-bold text-slate-800">15</div>
+          <div class="text-[10px] text-slate-500 mt-1">今週捕獲</div>
+        </div>
+        <div>
+          <div class="text-xl font-bold text-emerald-600">12</div>
+          <div class="text-[10px] text-slate-500 mt-1">振り分け済み</div>
+        </div>
+        <div>
+          <div class="text-xl font-bold text-rose-600">3</div>
+          <div class="text-[10px] text-slate-500 mt-1">未処理</div>
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-4 leading-relaxed border-t border-slate-100 pt-3">
+        💡 振り分け率が下がってきたら "捕獲はできているが処理する時間がない" サイン。週次レビューを意識的に。
+      </p>
+    </div>
+  </section>
+
+
+  <footer class="text-center text-xs text-slate-400 mt-10 pb-6">
+    ワイヤーフレーム / クリックは動きません
+  </footer>
+
+</div>
+
+</body>
+</html>

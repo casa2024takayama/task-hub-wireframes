@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>パーソナルタスクハブ - 受信箱 ワイヤー</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+</style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<div class="max-w-3xl mx-auto px-4 py-6">
+
+  <!-- ヘッダー -->
+  <header class="flex items-center justify-between mb-4">
+    <div class="flex items-center gap-3">
+      <button class="text-slate-500 hover:text-slate-800 text-sm">← ダッシュボード</button>
+      <h1 class="text-xl font-bold text-slate-800">受信箱</h1>
+      <span class="bg-rose-500 text-white text-xs px-2 py-0.5 rounded-full">3 件未処理</span>
+    </div>
+    <nav class="text-xs text-slate-500">
+      <button class="hover:text-slate-800">並び順 ▾</button>
+    </nav>
+  </header>
+
+  <!-- 説明バー -->
+  <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-5 text-xs text-indigo-800">
+    💡 各アイテムをタップして「プロジェクト」「サイズ」「締切」の3つだけ決めれば振り分け完了
+  </div>
+
+
+  <!-- ★ アイテム1: 折りたたみ状態（プレビューのみ） -->
+  <article class="bg-white rounded-lg shadow-sm border border-slate-200 mb-3 overflow-hidden">
+    <button class="w-full text-left p-4 hover:bg-slate-50 flex items-start gap-3">
+      <span class="text-slate-300 mt-0.5">▸</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm text-slate-800 font-medium truncate">
+          来週のセミナーで使うスライドのレビューをお願いできますか？金曜までにご対応…
+        </p>
+        <div class="flex gap-3 text-[11px] text-slate-400 mt-1">
+          <span>📅 今日 09:42 に貼り付け</span>
+          <span>📧 メール由来っぽい</span>
+        </div>
+      </div>
+    </button>
+  </article>
+
+
+  <!-- ★ アイテム2: 展開状態（振り分けフォーム表示中） -->
+  <article class="bg-white rounded-lg shadow-md border-2 border-indigo-300 mb-3 overflow-hidden">
+    <!-- ヘッダー部 -->
+    <div class="p-4 bg-indigo-50/40 border-b border-indigo-100 flex items-start gap-3">
+      <span class="text-indigo-500 mt-0.5">▾</span>
+      <div class="flex-1">
+        <div class="flex gap-3 text-[11px] text-slate-500 mb-2">
+          <span>📅 今日 08:15 に貼り付け</span>
+        </div>
+        <!-- 元の本文（プレビュー、折りたたみ可能） -->
+        <details class="text-xs text-slate-600 mb-3">
+          <summary class="cursor-pointer text-slate-500 hover:text-slate-800">▸ 元の本文を表示</summary>
+          <div class="mt-2 p-2 bg-slate-50 rounded text-slate-700 leading-relaxed">
+            お疲れ様です、佐藤です。<br>
+            5月の社内勉強会の登壇者プロフィールについて、明日のお昼までにご確認いただけますでしょうか。<br>
+            添付の通り3名分まとめております。<br>
+            よろしくお願いいたします。
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- 振り分けフォーム本体 -->
+    <div class="p-4 space-y-4">
+
+      <!-- タイトル（編集可能） -->
+      <div>
+        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">タスクのタイトル</label>
+        <input
+          type="text"
+          value="登壇者プロフィール3名分の確認返信"
+          class="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-400"
+        />
+      </div>
+
+      <!-- プロジェクト選択 -->
+      <div>
+        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">プロジェクト</label>
+        <select class="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-400 bg-white">
+          <option>選択してください…</option>
+          <option selected>社内勉強会 6月</option>
+          <option>5月セミナー（外部）</option>
+          <option>X 投稿運用</option>
+          <option>コーポレートサイト改修</option>
+          <option>月次レポート作成</option>
+          <option>＋ 新規プロジェクトを作成</option>
+        </select>
+      </div>
+
+      <!-- サイズ -->
+      <div>
+        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">サイズ</label>
+        <div class="flex gap-2 mt-1">
+          <button class="flex-1 py-2 px-3 rounded-lg border-2 border-amber-400 bg-amber-50 text-amber-800 text-sm font-medium">
+            小（30分以内）
+          </button>
+          <button class="flex-1 py-2 px-3 rounded-lg border border-slate-200 text-slate-600 text-sm">
+            大
+          </button>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-1">小タスクだけ当日朝のピン留め帯に出ます</p>
+      </div>
+
+      <!-- 締切（クイックボタン + カスタム） -->
+      <div>
+        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">締切</label>
+        <div class="grid grid-cols-4 gap-2 mt-1">
+          <button class="py-2 px-2 rounded-lg border border-slate-200 text-slate-600 text-xs hover:border-indigo-400">今日</button>
+          <button class="py-2 px-2 rounded-lg border-2 border-indigo-400 bg-indigo-50 text-indigo-800 text-xs font-medium">明日</button>
+          <button class="py-2 px-2 rounded-lg border border-slate-200 text-slate-600 text-xs hover:border-indigo-400">今週末</button>
+          <button class="py-2 px-2 rounded-lg border border-slate-200 text-slate-600 text-xs hover:border-indigo-400">未設定</button>
+        </div>
+        <input type="date" class="w-full mt-2 px-3 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-600" />
+      </div>
+
+      <!-- アクション -->
+      <div class="flex gap-2 pt-2 border-t border-slate-100">
+        <button class="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">
+          ✓ プロジェクトへ振り分ける
+        </button>
+        <button class="px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-500 hover:bg-slate-50" title="既に対応済み">
+          完了済み
+        </button>
+        <button class="px-3 py-2 border border-slate-200 rounded-lg text-xs text-rose-500 hover:bg-rose-50" title="タスクではなかった">
+          削除
+        </button>
+      </div>
+
+    </div>
+  </article>
+
+
+  <!-- ★ アイテム3: 折りたたみ状態 -->
+  <article class="bg-white rounded-lg shadow-sm border border-slate-200 mb-3 overflow-hidden">
+    <button class="w-full text-left p-4 hover:bg-slate-50 flex items-start gap-3">
+      <span class="text-slate-300 mt-0.5">▸</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm text-slate-800 font-medium truncate">
+          月末の経費精算、領収書まとめて提出お願いします
+        </p>
+        <div class="flex gap-3 text-[11px] text-slate-400 mt-1">
+          <span>📅 昨日 18:30 に貼り付け</span>
+          <span class="text-amber-600">⚠ 1日経過</span>
+        </div>
+      </div>
+    </button>
+  </article>
+
+
+  <!-- 受信箱が空のときのメッセージ（参考表示） -->
+  <div class="mt-8 text-center text-xs text-slate-400">
+    <p>すべて振り分けたら、ここには「受信箱は空です 🎉」と表示</p>
+  </div>
+
+
+  <footer class="text-center text-xs text-slate-400 mt-10 pb-6">
+    ワイヤーフレーム / クリックは動きません
+  </footer>
+
+</div>
+
+</body>
+</html>

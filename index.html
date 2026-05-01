@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>パーソナルタスクハブ - ワイヤーフレーム一覧</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+</style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+  <!-- タイトル -->
+  <header class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-800 mb-2">パーソナルタスクハブ</h1>
+    <p class="text-slate-600">マルチタスク並行運用者のための、捕獲ファースト型タスク管理ツール</p>
+    <p class="text-xs text-slate-400 mt-2">MVP ワイヤーフレーム一覧 / 2026-05-01</p>
+  </header>
+
+  <!-- コンセプト要約 -->
+  <section class="bg-white rounded-xl border-2 border-indigo-200 p-5 mb-8 shadow-sm">
+    <h2 class="text-sm font-bold text-indigo-700 uppercase tracking-wider mb-3">📌 設計の中核</h2>
+    <p class="text-slate-800 leading-relaxed mb-3">
+      <strong class="text-indigo-700">アプリのトップに常駐する貼り付け欄</strong>で、メールやチャットで来た依頼を <strong>2秒で捕獲 → 受信箱にプール</strong>。あとでまとめて「プロジェクト・サイズ・締切」の3つを決めて振り分ける。
+    </p>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs mt-4">
+      <div class="bg-indigo-50 rounded-lg p-3">
+        <div class="font-bold text-indigo-800 mb-1">📥 捕獲ファースト</div>
+        <div class="text-slate-700">小さい依頼を忘れない仕組み</div>
+      </div>
+      <div class="bg-amber-50 rounded-lg p-3">
+        <div class="font-bold text-amber-800 mb-1">⚠️ 小タスク優先通知</div>
+        <div class="text-slate-700">大は覚えている、小だけ前に出す</div>
+      </div>
+      <div class="bg-emerald-50 rounded-lg p-3">
+        <div class="font-bold text-emerald-800 mb-1">📍 再開メモ重視</div>
+        <div class="text-slate-700">マルチタスク復帰コストを最小化</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ワイヤー一覧 -->
+  <section class="mb-8">
+    <h2 class="text-lg font-bold text-slate-800 mb-4">画面ワイヤーフレーム</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <a href="dashboard-wireframe.html" class="block bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:border-indigo-300 transition group">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="text-base font-bold text-slate-800 group-hover:text-indigo-700">1. ダッシュボード</h3>
+          <span class="text-xs text-slate-400 group-hover:text-indigo-500">→</span>
+        </div>
+        <p class="text-xs text-slate-600 leading-relaxed mb-3">
+          メイン画面。最上段に常駐の貼り付け欄、その下に直近の小タスク、さらに下にプロジェクトカード一覧（再開メモを冒頭に表示）。
+        </p>
+        <div class="flex gap-1.5 flex-wrap">
+          <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">貼り付け欄</span>
+          <span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded">小タスク帯</span>
+          <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded">プロジェクト一覧</span>
+        </div>
+      </a>
+
+      <a href="inbox-wireframe.html" class="block bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:border-indigo-300 transition group">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="text-base font-bold text-slate-800 group-hover:text-indigo-700">2. 受信箱</h3>
+          <span class="text-xs text-slate-400 group-hover:text-indigo-500">→</span>
+        </div>
+        <p class="text-xs text-slate-600 leading-relaxed mb-3">
+          貼り付けたものがプールされる場所。タップで展開、プロジェクト・サイズ・締切の3つを決めて振り分け完了。
+        </p>
+        <div class="flex gap-1.5 flex-wrap">
+          <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">3つだけ決める</span>
+          <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded">折りたたみUI</span>
+        </div>
+      </a>
+
+      <a href="project-detail-wireframe.html" class="block bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:border-indigo-300 transition group">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="text-base font-bold text-slate-800 group-hover:text-indigo-700">3. プロジェクト詳細</h3>
+          <span class="text-xs text-slate-400 group-hover:text-indigo-500">→</span>
+        </div>
+        <p class="text-xs text-slate-600 leading-relaxed mb-3">
+          再開メモが最上段。タスク（小／大・締切で色分け）とアイテムリスト（揃えるもの）を分離して管理。
+        </p>
+        <div class="flex gap-1.5 flex-wrap">
+          <span class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">再開メモ</span>
+          <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded">タスク</span>
+          <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">アイテム</span>
+        </div>
+      </a>
+
+      <a href="reports-wireframe.html" class="block bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:border-indigo-300 transition group">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="text-base font-bold text-slate-800 group-hover:text-indigo-700">4. レポート</h3>
+          <span class="text-xs text-slate-400 group-hover:text-indigo-500">→</span>
+        </div>
+        <p class="text-xs text-slate-600 leading-relaxed mb-3">
+          週次／月次でアクティブ本数・完了タスク数・ルーチン実施率・受信箱の流れを集計。プロジェクトを何本回しているかの俯瞰用。
+        </p>
+        <div class="flex gap-1.5 flex-wrap">
+          <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">KPI</span>
+          <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">ルーチン履歴</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- 関連ドキュメント -->
+  <section class="mb-8">
+    <h2 class="text-lg font-bold text-slate-800 mb-3">関連ドキュメント</h2>
+    <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
+      <a href="mvp-spec.md" class="flex items-center gap-3 p-4 hover:bg-slate-50">
+        <span class="text-xl">📄</span>
+        <div class="flex-1">
+          <div class="text-sm font-medium text-slate-800">MVP 仕様メモ</div>
+          <div class="text-xs text-slate-500">想定ユーザー、データモデル、画面構成、技術スタックなどの全体像</div>
+        </div>
+        <span class="text-xs text-slate-400">→</span>
+      </a>
+      <a href="lp.html" class="flex items-center gap-3 p-4 hover:bg-slate-50">
+        <span class="text-xl">🚀</span>
+        <div class="flex-1">
+          <div class="text-sm font-medium text-slate-800">ランディングページ（マーケター視点）</div>
+          <div class="text-xs text-slate-500">SNS等でPRするための紹介ページ。ヒーロー・課題・機能・FAQ構成</div>
+        </div>
+        <span class="text-xs text-slate-400">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- 次のステップ -->
+  <section class="bg-slate-800 text-slate-100 rounded-xl p-5">
+    <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">次のステップ</h2>
+    <ol class="space-y-2 text-sm">
+      <li class="flex gap-3"><span class="text-slate-500">1.</span><span>ワイヤーを PC と iPhone で確認、違和感のある箇所をフィードバック</span></li>
+      <li class="flex gap-3"><span class="text-slate-500">2.</span><span>Supabase プロジェクト立ち上げ（"腰を据える" タイミングで）</span></li>
+      <li class="flex gap-3"><span class="text-slate-500">3.</span><span>第1スプリント実装（ダッシュボード骨組み + 貼り付け欄 + 受信箱）</span></li>
+      <li class="flex gap-3"><span class="text-slate-500">4.</span><span>2週間自分で使ってみて、続かなかった理由を観察</span></li>
+    </ol>
+  </section>
+
+  <footer class="text-center text-xs text-slate-400 mt-8">
+    すべてワイヤーフレーム / 静的 HTML / クリックは動きません
+  </footer>
+
+</div>
+
+</body>
+</html>

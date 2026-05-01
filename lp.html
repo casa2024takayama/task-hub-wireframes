@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>タスクハブ - 5本のプロジェクトを同時に走らせる、あなたへ。</title>
+<meta name="description" content="メールで来た小さい依頼を、もう忘れない。マルチタスク並行運用者のための、捕獲ファースト型タスク管理ツール。" />
+<meta property="og:title" content="タスクハブ - マルチタスク並行運用者のためのタスク管理" />
+<meta property="og:description" content="JIRA は重い、Notion は続かない。5-6プロジェクトを並行する人のための、新しいかたち。" />
+<meta property="og:type" content="website" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+  .gradient-hero { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%); }
+  .gradient-text { background: linear-gradient(135deg, #4f46e5, #db2777); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .float { animation: float 4s ease-in-out infinite; }
+</style>
+</head>
+<body class="bg-white">
+
+<!-- ───────── ヒーロー ───────── -->
+<section class="gradient-hero text-white relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px); background-size: 24px 24px;"></div>
+  <div class="max-w-5xl mx-auto px-6 py-20 sm:py-28 relative">
+    <div class="inline-block bg-white/15 backdrop-blur text-xs px-3 py-1 rounded-full mb-6 border border-white/20">
+      MVP / 個人開発プロジェクト
+    </div>
+    <h1 class="text-4xl sm:text-6xl font-bold leading-tight mb-6">
+      5本のプロジェクトを<br class="hidden sm:block" />
+      同時に走らせる、あなたへ。
+    </h1>
+    <p class="text-lg sm:text-xl text-indigo-100 mb-10 max-w-2xl leading-relaxed">
+      メールで来た小さい依頼を、もう忘れない。<br />
+      マルチタスク並行運用者のための、<strong class="text-white">捕獲ファースト型</strong>タスク管理ツール。
+    </p>
+    <div class="flex flex-wrap gap-3">
+      <a href="index.html" class="bg-white text-indigo-700 px-6 py-3 rounded-full font-semibold hover:bg-indigo-50 transition shadow-lg">
+        ワイヤーフレームを見る →
+      </a>
+      <a href="#problem" class="bg-white/10 backdrop-blur border border-white/30 text-white px-6 py-3 rounded-full font-semibold hover:bg-white/20 transition">
+        まず課題を読む
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── 課題（共感） ───────── -->
+<section id="problem" class="py-20 bg-slate-50">
+  <div class="max-w-4xl mx-auto px-6">
+    <p class="text-sm font-bold text-rose-600 uppercase tracking-wider mb-3">こんな経験、ありませんか？</p>
+    <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-12 leading-tight">
+      "メールで頼まれてた、あの件…"<br />
+      ─ また、忘れていませんでしたか。
+    </h2>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div class="text-3xl mb-3">📧</div>
+        <p class="text-slate-700 leading-relaxed">
+          メールで来た <strong>小さな依頼</strong>。「あとでやる」と思った瞬間に、もう次のミーティング。
+        </p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div class="text-3xl mb-3">🌀</div>
+        <p class="text-slate-700 leading-relaxed">
+          5本のプロジェクトを行き来して、毎回 <strong>"どこまでやったっけ？"</strong> から始まる。
+        </p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div class="text-3xl mb-3">📅</div>
+        <p class="text-slate-700 leading-relaxed">
+          大きな締切は覚えている。でも <strong>小さな頼まれごと</strong>が、いつも抜け落ちる。
+        </p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div class="text-3xl mb-3">📊</div>
+        <p class="text-slate-700 leading-relaxed">
+          JIRA は重い。Notion は続かない。<strong>そもそも自分は "1つに集中できる人" 用じゃない</strong>。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── なぜ続かないのか ───────── -->
+<section class="py-20 bg-white">
+  <div class="max-w-4xl mx-auto px-6">
+    <p class="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-3">既存ツールが続かない理由</p>
+    <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-8 leading-tight">
+      "タスク中心" の設計は、<br />
+      マルチタスクの人には<span class="gradient-text">合わない。</span>
+    </h2>
+    <p class="text-lg text-slate-600 leading-relaxed mb-10">
+      JIRA や Notion は「次に何をやるか」を中心に作られています。<br />
+      でも本当にマルチタスクの人に必要なのは ─
+    </p>
+
+    <div class="grid sm:grid-cols-3 gap-5">
+      <div class="bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-6 border-2 border-indigo-100">
+        <div class="text-4xl font-bold gradient-text mb-2">01</div>
+        <h3 class="font-bold text-slate-800 mb-2">捕獲の摩擦ゼロ</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          忙しい瞬間に「あとで忘れない場所に置く」が2秒でできること。
+        </p>
+      </div>
+      <div class="bg-gradient-to-br from-amber-50 to-white rounded-2xl p-6 border-2 border-amber-100">
+        <div class="text-4xl font-bold gradient-text mb-2">02</div>
+        <h3 class="font-bold text-slate-800 mb-2">小タスクだけを前に</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          大きな仕事は自然と覚えている。忘れやすい "小さな依頼" だけを浮上させる。
+        </p>
+      </div>
+      <div class="bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-100">
+        <div class="text-4xl font-bold gradient-text mb-2">03</div>
+        <h3 class="font-bold text-slate-800 mb-2">復帰コストの最小化</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          "前回どこで止まったか" を一瞬で思い出せる、再開メモが各プロジェクトに常駐。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── 中核機能（貼り付け欄） ───────── -->
+<section class="py-20 bg-gradient-to-b from-indigo-50 to-white">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="grid sm:grid-cols-2 gap-12 items-center">
+      <div>
+        <p class="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-3">設計の中核</p>
+        <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-6 leading-tight">
+          アプリのトップに常駐する<br />
+          <span class="gradient-text">"貼り付け欄"</span>
+        </h2>
+        <p class="text-slate-700 leading-relaxed mb-4">
+          メールで依頼を受けたその瞬間、本文をコピー → アプリのトップに貼り付け → <strong>受信箱に直行</strong>。
+        </p>
+        <p class="text-slate-700 leading-relaxed mb-4">
+          この時点では何も決めなくていい。<strong>忘れない場所に放り込むだけ</strong>。
+        </p>
+        <p class="text-slate-700 leading-relaxed">
+          落ち着いてから、まとめて「プロジェクト・サイズ・締切」の3つだけ決めて振り分ける。
+        </p>
+      </div>
+
+      <!-- 模擬UI -->
+      <div class="bg-white rounded-2xl shadow-2xl border-2 border-indigo-200 p-5 float">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-indigo-600 text-lg">📥</span>
+          <span class="text-sm font-semibold text-slate-700">ここに貼り付け</span>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-500 mb-3 leading-relaxed">
+          "5月の社内勉強会の登壇者プロフィールについて、明日のお昼までにご確認..."
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-slate-400">後で振り分けOK</span>
+          <button class="bg-indigo-600 text-white text-xs px-4 py-1.5 rounded-lg">受信箱へ →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── 主な機能 ───────── -->
+<section class="py-20 bg-white">
+  <div class="max-w-5xl mx-auto px-6">
+    <p class="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-3 text-center">主な機能</p>
+    <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 text-center mb-12">
+      シンプル、でも、必要十分。
+    </h2>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-xl transition">
+        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+          <span class="text-2xl">📥</span>
+        </div>
+        <h3 class="font-bold text-slate-800 mb-2">常駐の貼り付け欄</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">受信メールを即捕獲、受信箱にプール。</p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-xl transition">
+        <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4">
+          <span class="text-2xl">⚠️</span>
+        </div>
+        <h3 class="font-bold text-slate-800 mb-2">小タスク優先通知</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">忘れやすい小さな依頼だけを、当日朝に浮上。</p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-xl transition">
+        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-4">
+          <span class="text-2xl">📍</span>
+        </div>
+        <h3 class="font-bold text-slate-800 mb-2">プロジェクト再開メモ</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">「前回どこで止まったか」を即思い出す。</p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-xl transition">
+        <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+          <span class="text-2xl">📦</span>
+        </div>
+        <h3 class="font-bold text-slate-800 mb-2">タスクとアイテム分離</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">"やること" と "揃えるもの" を別管理。</p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-xl transition">
+        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+          <span class="text-2xl">🔁</span>
+        </div>
+        <h3 class="font-bold text-slate-800 mb-2">ルーチン対応</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">週次／月次の繰り返し業務をワンタップ複製。</p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-xl transition">
+        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+          <span class="text-2xl">📱</span>
+        </div>
+        <h3 class="font-bold text-slate-800 mb-2">PC + iPhone 同期</h3>
+        <p class="text-sm text-slate-600 leading-relaxed">PCで貼って、iPhoneで確認。リアルタイム連携。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── 使い方3ステップ ───────── -->
+<section class="py-20 bg-slate-900 text-white">
+  <div class="max-w-4xl mx-auto px-6">
+    <p class="text-sm font-bold text-indigo-400 uppercase tracking-wider mb-3">使い方</p>
+    <h2 class="text-3xl sm:text-4xl font-bold mb-12">3ステップで、もう忘れない。</h2>
+
+    <div class="space-y-6">
+      <div class="flex gap-6 items-start">
+        <div class="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold">1</div>
+        <div>
+          <h3 class="text-xl font-bold mb-2">捕獲</h3>
+          <p class="text-slate-300 leading-relaxed">メール本文をコピペ。トップの貼り付け欄に貼るだけ、2秒で受信箱に。</p>
+        </div>
+      </div>
+      <div class="flex gap-6 items-start">
+        <div class="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center text-2xl font-bold">2</div>
+        <div>
+          <h3 class="text-xl font-bold mb-2">振り分け</h3>
+          <p class="text-slate-300 leading-relaxed">あとでまとめて「プロジェクト・サイズ・締切」の3つだけ決める。</p>
+        </div>
+      </div>
+      <div class="flex gap-6 items-start">
+        <div class="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center text-2xl font-bold">3</div>
+        <div>
+          <h3 class="text-xl font-bold mb-2">集中</h3>
+          <p class="text-slate-300 leading-relaxed">今やるべき小タスクが浮上、再開メモで止まった場所からすぐ戻れる。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── ターゲットユーザー ───────── -->
+<section class="py-20 bg-white">
+  <div class="max-w-4xl mx-auto px-6 text-center">
+    <p class="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-3">こんな方に</p>
+    <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-12">
+      時間が分断される、あなたのために。
+    </h2>
+
+    <div class="grid sm:grid-cols-2 gap-4 text-left">
+      <div class="flex gap-3 items-start bg-slate-50 rounded-xl p-5">
+        <span class="text-emerald-500 text-xl">✓</span>
+        <span class="text-slate-700">社内イベントと社外イベントを並行で回している</span>
+      </div>
+      <div class="flex gap-3 items-start bg-slate-50 rounded-xl p-5">
+        <span class="text-emerald-500 text-xl">✓</span>
+        <span class="text-slate-700">SNS / Web / 外部発信を兼任している</span>
+      </div>
+      <div class="flex gap-3 items-start bg-slate-50 rounded-xl p-5">
+        <span class="text-emerald-500 text-xl">✓</span>
+        <span class="text-slate-700">1日に5〜6プロジェクトを行き来する</span>
+      </div>
+      <div class="flex gap-3 items-start bg-slate-50 rounded-xl p-5">
+        <span class="text-emerald-500 text-xl">✓</span>
+        <span class="text-slate-700">"集中する" 時間が細切れにしかとれない</span>
+      </div>
+      <div class="flex gap-3 items-start bg-slate-50 rounded-xl p-5">
+        <span class="text-emerald-500 text-xl">✓</span>
+        <span class="text-slate-700">JIRA / Notion がしっくりこなかった</span>
+      </div>
+      <div class="flex gap-3 items-start bg-slate-50 rounded-xl p-5">
+        <span class="text-emerald-500 text-xl">✓</span>
+        <span class="text-slate-700">大きな締切は覚えているが小さな依頼を忘れる</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── FAQ ───────── -->
+<section class="py-20 bg-slate-50">
+  <div class="max-w-3xl mx-auto px-6">
+    <p class="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-3">FAQ</p>
+    <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-10">よくある質問</h2>
+
+    <div class="space-y-3">
+      <details class="bg-white rounded-xl border border-slate-200 p-5 group">
+        <summary class="font-semibold text-slate-800 cursor-pointer flex justify-between items-center">
+          <span>チームで使えますか？</span>
+          <span class="text-slate-400 group-open:rotate-180 transition">▾</span>
+        </summary>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">MVP は完全に個人向けです。共有・コラボ機能は意図的に省いています ─ "個人のマルチタスク復帰コスト" の問題に集中したいからです。</p>
+      </details>
+
+      <details class="bg-white rounded-xl border border-slate-200 p-5 group">
+        <summary class="font-semibold text-slate-800 cursor-pointer flex justify-between items-center">
+          <span>通知はどう来ますか？</span>
+          <span class="text-slate-400 group-open:rotate-180 transition">▾</span>
+        </summary>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">当日朝と前日にメールダイジェストで届きます ─ 通知するのは <strong>"忘れやすい小タスク" だけ</strong>。大きな仕事は自分で覚えているので通知しません。</p>
+      </details>
+
+      <details class="bg-white rounded-xl border border-slate-200 p-5 group">
+        <summary class="font-semibold text-slate-800 cursor-pointer flex justify-between items-center">
+          <span>料金は？</span>
+          <span class="text-slate-400 group-open:rotate-180 transition">▾</span>
+        </summary>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">個人開発のため、現時点では本人専用ツールです。将来公開する場合は別途検討。</p>
+      </details>
+
+      <details class="bg-white rounded-xl border border-slate-200 p-5 group">
+        <summary class="font-semibold text-slate-800 cursor-pointer flex justify-between items-center">
+          <span>iPhone のアプリですか？</span>
+          <span class="text-slate-400 group-open:rotate-180 transition">▾</span>
+        </summary>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">ブラウザで動く PWA（Web アプリ）です。iPhone のホーム画面に追加すればアプリのように使えます。PC でも同じ URL で動作。</p>
+      </details>
+
+      <details class="bg-white rounded-xl border border-slate-200 p-5 group">
+        <summary class="font-semibold text-slate-800 cursor-pointer flex justify-between items-center">
+          <span>既存ツール（JIRA, Notion）からの移行は？</span>
+          <span class="text-slate-400 group-open:rotate-180 transition">▾</span>
+        </summary>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">移行は不要です。既存のタスクを移すのではなく <strong>"新しく来た依頼から、ここで捕獲する"</strong> 使い方が前提。古いものは古いツールに置いたままで OK。</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── CTA ───────── -->
+<section class="py-24 gradient-hero text-white relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 80% 50%, white 1px, transparent 1px); background-size: 32px 32px;"></div>
+  <div class="max-w-3xl mx-auto px-6 text-center relative">
+    <h2 class="text-3xl sm:text-5xl font-bold mb-6 leading-tight">
+      "また忘れていた…" を、<br />
+      もう、終わりに。
+    </h2>
+    <p class="text-lg text-indigo-100 mb-10 leading-relaxed">
+      MVP のワイヤーフレームと仕様書を公開しています。<br />
+      フィードバック歓迎。
+    </p>
+    <div class="flex flex-wrap justify-center gap-3">
+      <a href="index.html" class="bg-white text-indigo-700 px-6 py-3 rounded-full font-semibold hover:bg-indigo-50 transition shadow-lg">
+        ワイヤーフレームを見る →
+      </a>
+      <a href="mvp-spec.md" class="bg-white/10 backdrop-blur border border-white/30 text-white px-6 py-3 rounded-full font-semibold hover:bg-white/20 transition">
+        仕様書を読む
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── 関連ドキュメント ───────── -->
+<section class="py-16 bg-white">
+  <div class="max-w-3xl mx-auto px-6">
+    <h2 class="text-lg font-bold text-slate-800 mb-5">関連ドキュメント</h2>
+    <div class="bg-slate-50 rounded-xl divide-y divide-slate-200">
+      <a href="mvp-spec.md" class="flex items-center gap-3 p-4 hover:bg-slate-100 rounded-t-xl transition">
+        <span class="text-2xl">📄</span>
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-slate-800">MVP 仕様メモ</div>
+          <div class="text-xs text-slate-500">想定ユーザー、データモデル、画面構成、技術スタックの全体像</div>
+        </div>
+        <span class="text-slate-400">→</span>
+      </a>
+      <a href="index.html" class="flex items-center gap-3 p-4 hover:bg-slate-100 transition">
+        <span class="text-2xl">🎨</span>
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-slate-800">ワイヤーフレーム一覧</div>
+          <div class="text-xs text-slate-500">ダッシュボード・受信箱・プロジェクト詳細・レポート</div>
+        </div>
+        <span class="text-slate-400">→</span>
+      </a>
+      <a href="dashboard-wireframe.html" class="flex items-center gap-3 p-4 hover:bg-slate-100 rounded-b-xl transition">
+        <span class="text-2xl">📊</span>
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-slate-800">ダッシュボード（中核画面）</div>
+          <div class="text-xs text-slate-500">常駐の貼り付け欄が見える、コアの体験</div>
+        </div>
+        <span class="text-slate-400">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───────── フッター ───────── -->
+<footer class="py-10 bg-slate-900 text-slate-400 text-center text-xs">
+  <p>パーソナルタスクハブ MVP / 2026</p>
+  <p class="mt-2">個人開発プロジェクト・ワイヤーフレーム公開中</p>
+</footer>
+
+</body>
+</html>

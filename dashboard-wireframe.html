@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>パーソナルタスクハブ - ダッシュボード ワイヤー</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+</style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<!-- アプリ本体（中央配置、最大幅でモバイルとPC両方を確認できるように） -->
+<div class="max-w-3xl mx-auto px-4 py-6">
+
+  <!-- ヘッダー -->
+  <header class="flex items-center justify-between mb-4">
+    <h1 class="text-xl font-bold text-slate-800">タスクハブ</h1>
+    <nav class="flex gap-3 text-sm text-slate-500">
+      <button class="hover:text-slate-800">受信箱 <span class="ml-1 inline-block bg-rose-500 text-white text-xs px-1.5 py-0.5 rounded-full">3</span></button>
+      <button class="hover:text-slate-800">レポート</button>
+      <button class="hover:text-slate-800">設定</button>
+    </nav>
+  </header>
+
+  <!-- ★ 1. 常駐の貼り付け欄（このツールのキモ） -->
+  <section class="bg-white rounded-xl shadow-md border-2 border-indigo-200 p-4 mb-5 sticky top-2 z-10">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="text-indigo-600 text-lg">📥</span>
+      <span class="text-sm font-semibold text-slate-700">ここに貼り付け（メール本文・依頼内容など）</span>
+    </div>
+    <textarea
+      class="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:border-indigo-400 resize-none"
+      rows="2"
+      placeholder="ペースト → Enter で受信箱へ"
+    ></textarea>
+    <div class="flex items-center justify-between mt-2">
+      <span class="text-xs text-slate-400">後で振り分けOK。とにかく忘れない場所へ。</span>
+      <button class="bg-indigo-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-indigo-700">受信箱へ</button>
+    </div>
+  </section>
+
+  <!-- ★ 2. 今日／明日の "小タスク" ピン留め帯 -->
+  <section class="mb-6">
+    <h2 class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-2">
+      <span>⚠️ 直近の小タスク（忘れやすいやつ）</span>
+    </h2>
+    <div class="space-y-2">
+      <!-- 今日 -->
+      <div class="bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-3 flex items-center gap-3">
+        <input type="checkbox" class="w-5 h-5 accent-amber-600" />
+        <div class="flex-1">
+          <div class="text-sm font-medium text-slate-800">経費精算の領収書を経理に提出</div>
+          <div class="text-xs text-slate-500">社内総務 / 今日 17:00 まで</div>
+        </div>
+        <span class="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded">今日</span>
+      </div>
+      <!-- 明日 -->
+      <div class="bg-amber-50/60 border-l-4 border-amber-300 rounded-r-lg p-3 flex items-center gap-3">
+        <input type="checkbox" class="w-5 h-5 accent-amber-600" />
+        <div class="flex-1">
+          <div class="text-sm font-medium text-slate-800">登壇者プロフィールの確認返信</div>
+          <div class="text-xs text-slate-500">外部イベント / 明日 12:00 まで</div>
+        </div>
+        <span class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded">明日</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ★ 3. プロジェクトカード一覧（再開メモ重視） -->
+  <section>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-bold text-slate-700">プロジェクト</h2>
+      <button class="text-xs text-indigo-600 hover:underline">+ 新規プロジェクト</button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+      <!-- カード1: 単発・社外イベント -->
+      <article class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 hover:shadow-md transition">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="font-semibold text-slate-800">5月セミナー（外部）</h3>
+          <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded">単発</span>
+        </div>
+        <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+          <span class="font-semibold text-slate-500">📍 再開メモ：</span>
+          会場の音響チェックまで完了。次は登壇者へリマインド送信。山田さん要確認。
+        </p>
+        <div class="flex gap-3 text-[11px] text-slate-500">
+          <span>✅ タスク 3/8</span>
+          <span>📦 アイテム 4件</span>
+          <span class="text-rose-600">締切 5/20</span>
+        </div>
+      </article>
+
+      <!-- カード2: ルーチン・X運用 -->
+      <article class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 hover:shadow-md transition">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="font-semibold text-slate-800">X 投稿運用</h3>
+          <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">週次</span>
+        </div>
+        <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+          <span class="font-semibold text-slate-500">📍 再開メモ：</span>
+          先週分は完了。今週のネタ案は3つ下書き済み。木曜に画像準備。
+        </p>
+        <div class="flex gap-3 text-[11px] text-slate-500">
+          <span>✅ タスク 2/5</span>
+          <span>📦 アイテム 0件</span>
+          <span>今週分</span>
+        </div>
+      </article>
+
+      <!-- カード3: 単発・Web -->
+      <article class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 hover:shadow-md transition">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="font-semibold text-slate-800">コーポレートサイト改修</h3>
+          <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded">単発</span>
+        </div>
+        <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+          <span class="font-semibold text-slate-500">📍 再開メモ：</span>
+          デザイナーから初稿到着。レビュー待ち。フィードバックは金曜まで。
+        </p>
+        <div class="flex gap-3 text-[11px] text-slate-500">
+          <span>✅ タスク 1/6</span>
+          <span>📦 アイテム 2件</span>
+          <span>締切 6/10</span>
+        </div>
+      </article>
+
+      <!-- カード4: ルーチン・月次 -->
+      <article class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 hover:shadow-md transition">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="font-semibold text-slate-800">月次レポート作成</h3>
+          <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">月次</span>
+        </div>
+        <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+          <span class="font-semibold text-slate-500">📍 再開メモ：</span>
+          前月分は提出済み。今月分は来週着手予定。データ収集から。
+        </p>
+        <div class="flex gap-3 text-[11px] text-slate-500">
+          <span>✅ タスク 0/4</span>
+          <span>📦 アイテム 1件</span>
+          <span>月末まで</span>
+        </div>
+      </article>
+
+      <!-- カード5: 社内イベント -->
+      <article class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 hover:shadow-md transition">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="font-semibold text-slate-800">社内勉強会 6月</h3>
+          <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded">単発</span>
+        </div>
+        <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+          <span class="font-semibold text-slate-500">📍 再開メモ：</span>
+          テーマ確定。発表者2名内定、あと1名打診中。会場予約まだ。
+        </p>
+        <div class="flex gap-3 text-[11px] text-slate-500">
+          <span>✅ タスク 2/9</span>
+          <span>📦 アイテム 0件</span>
+          <span>締切 6/15</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- フッター注釈 -->
+  <footer class="text-center text-xs text-slate-400 mt-10 pb-6">
+    ワイヤーフレーム / クリックは動きません
+  </footer>
+
+</div>
+
+</body>
+</html>
