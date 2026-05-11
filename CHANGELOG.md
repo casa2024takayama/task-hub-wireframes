@@ -9,6 +9,19 @@
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-05-11
+
+### 追加
+- 設定画面に **Google 連携 / Google ログイン**（端末間で同一 Firestore データを参照する手順）
+- Firebase Auth: `linkWithPopup`（初回端末）と `signOut` + `signInWithPopup`（2 台目以降）の導線
+
+### 変更
+- Firestore 同期は **Zustand persist のハイドレーション完了後**に開始し、古い localStorage がクラウドを上書きしにくい順序に変更
+- 認証 UID が変わったときにリアルタイム購読を張り直すよう `onAuthStateChanged` で再初期化
+
+### ドキュメント
+- 設定画面に「匿名は端末ごとに別 UID」「承認済みドメイン」を短く記載
+
 ## [0.3.1] — 2026-05-11
 
 ### 変更

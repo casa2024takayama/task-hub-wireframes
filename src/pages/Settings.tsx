@@ -1,11 +1,27 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppStore } from '../store'
+import {
+  auth,
+  getAuthSummary,
+  linkGoogleToCurrentUser,
+  signInWithGoogleReplacingSession,
+  onAuthStateChanged,
+} from '../lib/firebase'
 
 const APP_VERSION =
   typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
+  {
+    version: '0.3.2',
+    date: '2026-05-11',
+    lines: [
+      'Google ログイン（端末間で同じ Firestore データを共有）',
+      '匿名は端末ごとに別 UID の説明と連携手順を設定に追記',
+      'localStorage 復元後に Firestore 同期開始（上書き競合の改善）',
+    ],
+  },
   {
     version: '0.3.1',
     date: '2026-05-11',
@@ -22,16 +38,6 @@ const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
       'ヘッダーに同期ステータスドット表示',
       '入力欄の Enter 送信を廃止（IME 誤登録対策）',
       '設定画面のバージョン表示を大型化',
-    ],
-  },
-  {
-    version: '0.2.0',
-    date: '2026-05-11',
-    lines: [
-      '環境設定画面（エクスポート / インポート / クリア）',
-      'ヘッダーに現在日時表示',
-      'レポートに最近完了したタスク一覧',
-      'バージョン管理（CHANGELOG.md）運用開始',
     ],
   },
 ]
@@ -56,6 +62,11 @@ export default function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState<{ type: 'info' | 'error' | 'success'; text: string } | null>(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [authSummary, setAuthSummary] = useState(() => getAuthSummary(auth.currentUser))
+  const [showGoogleCloudConfirm, setShowGoogleCloudConfirm] = useState(false)
+  const [authBusy, setAuthBusy] = useState(false)
+
+  useEffect(() => onAuthStateChanged(auth, (u) => setAuthSummary(getAuthSummary(u))), [])
 
   function handleExport() {
     const payload = exportData()
@@ -114,6 +125,31 @@ export default function Settings() {
     window.location.replace(url.toString())
   }
 
+  async function handleLinkGoogle() {
+    setAuthBusy(true)
+    try {
+      await linkGoogleToCurrentUser()
+      setMessage({ type: 'success', text: 'Google と連携しました。この端末のデータはクラウドに紐付け済みです。' })
+    } catch (e) {
+      setMessage({ type: 'error', text: `連携に失敗：${e instanceof Error ? e.message : '不明なエラー'}` })
+    } finally {
+      setAuthBusy(false)
+    }
+  }
+
+  async function handleGoogleCloudLogin() {
+    setShowGoogleCloudConfirm(false)
+    setAuthBusy(true)
+    try {
+      await signInWithGoogleReplacingSession()
+      setMessage({ type: 'success', text: 'Google でログインしました。クラウド上のデータを読み込みます。' })
+    } catch (e) {
+      setMessage({ type: 'error', text: `ログインに失敗：${e instanceof Error ? e.message : '不明なエラー'}` })
+    } finally {
+      setAuthBusy(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -134,6 +170,65 @@ export default function Settings() {
           {message.text}
         </div>
       )}
+
+      {/* アカウント・クラウド同期 */}
+      <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
+        <h2 className="text-sm font-bold text-slate-700">アカウント・クラウド同期</h2>
+
+        <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 leading-relaxed">
+          <p className="font-semibold text-amber-800 mb-1">匿名ログインについて</p>
+          <p>
+            匿名のままでは<strong>ブラウザごとに Firebase のユーザー ID が別</strong>になります。
+            そのため「同期済み」と出ていても<strong>他の端末とは別のデータ</strong>を見ています。
+            PC とスマホで同じデータにするには、下の <strong>Google 連携</strong> が必要です。
+          </p>
+        </div>
+
+        <div className="text-xs text-slate-600 space-y-1">
+          <p>
+            <span className="text-slate-500">現在：</span>
+            {authSummary.isAnonymous
+              ? '匿名（この端末専用 ID）'
+              : `Google：${authSummary.email ?? '（メール取得なし）'}`}
+          </p>
+          <p className="text-slate-400">
+            Firebase コンソールで「Authentication → Sign-in method → Google」を有効にし、
+            承認済みドメインに <code className="bg-slate-100 px-1 rounded">casa2024takayama.github.io</code> と{' '}
+            <code className="bg-slate-100 px-1 rounded">localhost</code> を追加してください。
+          </p>
+        </div>
+
+        <div className="border-t border-slate-100 pt-3 space-y-3">
+          <p className="text-xs font-semibold text-slate-600">手順（推奨）</p>
+          <ol className="text-xs text-slate-600 list-decimal list-inside space-y-1">
+            <li>
+              <strong>最初に使う端末</strong>で「Google と連携（この端末のデータを紐付け）」
+            </li>
+            <li>
+              <strong>もう一方の端末</strong>で「Google でログイン（他端末と同じデータ）」
+            </li>
+          </ol>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button
+            type="button"
+            disabled={authBusy || !authSummary.isAnonymous}
+            onClick={handleLinkGoogle}
+            className="flex-1 bg-indigo-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+          >
+            Google と連携（この端末のデータを紐付け）
+          </button>
+          <button
+            type="button"
+            disabled={authBusy || !authSummary.isAnonymous}
+            onClick={() => setShowGoogleCloudConfirm(true)}
+            className="flex-1 bg-white border border-indigo-600 text-indigo-600 text-sm px-4 py-2 rounded-lg hover:bg-indigo-50 transition disabled:opacity-40"
+          >
+            Google でログイン（他端末と同じデータ）
+          </button>
+        </div>
+      </section>
 
       {/* データ管理 */}
       <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
@@ -234,6 +329,36 @@ export default function Settings() {
           <p className="text-[10px] text-slate-400 mt-3">完全な履歴は <code className="bg-slate-100 px-1 rounded">CHANGELOG.md</code> 参照</p>
         </div>
       </section>
+
+      {/* Google ログイン確認 */}
+      {showGoogleCloudConfirm && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 space-y-4">
+            <h3 className="text-base font-bold text-slate-800">Google でログインしますか？</h3>
+            <p className="text-sm text-slate-600">
+              この端末だけの匿名データがまだクラウドに上がっていない場合、
+              <strong>ログイン後に表示がクラウド側の内容で上書き</strong>されることがあります。
+              必要なら先にエクスポートしてください。
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowGoogleCloudConfirm(false)}
+                className="text-sm text-slate-500 px-3 py-1.5 hover:text-slate-700"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={handleGoogleCloudLogin}
+                className="bg-indigo-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-indigo-700"
+              >
+                ログインする
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* クリア確認モーダル */}
       {showClearConfirm && (

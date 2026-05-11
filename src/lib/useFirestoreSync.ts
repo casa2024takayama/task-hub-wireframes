@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { setDoc, getDoc, onSnapshot, waitForUid, userDataRef } from './firebase'
+import {
+  setDoc,
+  getDoc,
+  onSnapshot,
+  userDataRef,
+  auth,
+  onAuthStateChanged,
+  ensureAnonymousSession,
+} from './firebase'
 import { useAppStore } from '../store'
 import type { Project, Task, InboxItem } from '../types'
 
@@ -25,34 +33,48 @@ export function useFirestoreSync() {
   const uidRef = useRef<string | null>(null)
   const isApplyingRemoteRef = useRef(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  function scheduleSave(uid: string) {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    setStatus('saving')
-    saveTimerRef.current = setTimeout(async () => {
-      try {
-        const { projects, inbox, unassignedTasks } = useAppStore.getState()
-        await setDoc(userDataRef(uid), {
-          projects,
-          inbox,
-          unassignedTasks,
-          updatedAt: new Date().toISOString(),
-        })
-        setStatus('synced')
-      } catch (e) {
-        console.error('[sync] save failed', e)
-        setStatus('error')
-      }
-    }, DEBOUNCE_MS)
-  }
+  const unsubSnapshotRef = useRef<(() => void) | null>(null)
+  const unsubStoreRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    let unsubSnapshot: (() => void) | null = null
+    let cancelled = false
 
-    waitForUid().then(async (uid) => {
+    function scheduleSave(uid: string) {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      setStatus('saving')
+      saveTimerRef.current = setTimeout(async () => {
+        try {
+          const { projects, inbox, unassignedTasks } = useAppStore.getState()
+          await setDoc(userDataRef(uid), {
+            projects,
+            inbox,
+            unassignedTasks,
+            updatedAt: new Date().toISOString(),
+          })
+          setStatus('synced')
+        } catch (e) {
+          console.error('[sync] save failed', e)
+          setStatus('error')
+        }
+      }, DEBOUNCE_MS)
+    }
+
+    function teardownSync() {
+      unsubSnapshotRef.current?.()
+      unsubSnapshotRef.current = null
+      unsubStoreRef.current?.()
+      unsubStoreRef.current = null
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
+      }
+      uidRef.current = null
+    }
+
+    async function startSyncForUid(uid: string) {
+      teardownSync()
       uidRef.current = uid
 
-      // Firestore にデータがなければローカルデータをアップロードして初期化
       const snap = await getDoc(userDataRef(uid))
       if (!snap.exists()) {
         const { projects, inbox, unassignedTasks } = useAppStore.getState()
@@ -64,8 +86,7 @@ export function useFirestoreSync() {
         })
       }
 
-      // リアルタイム同期をサブスクライブ
-      unsubSnapshot = onSnapshot(
+      unsubSnapshotRef.current = onSnapshot(
         userDataRef(uid),
         (docSnap) => {
           if (!docSnap.exists()) return
@@ -86,28 +107,51 @@ export function useFirestoreSync() {
           setStatus('offline')
         }
       )
-    }).catch((err) => {
-      console.error('[sync] auth error', err)
-      setStatus('error')
-    })
 
-    // Zustand のデータ変更を監視して Firestore に保存
-    const unsubStore = useAppStore.subscribe((state, prev) => {
-      if (isApplyingRemoteRef.current) return
-      if (!uidRef.current) return
-      if (
-        state.projects !== prev.projects ||
-        state.inbox !== prev.inbox ||
-        state.unassignedTasks !== prev.unassignedTasks
-      ) {
-        scheduleSave(uidRef.current)
-      }
-    })
+      unsubStoreRef.current = useAppStore.subscribe((state, prev) => {
+        if (isApplyingRemoteRef.current) return
+        if (!uidRef.current) return
+        if (
+          state.projects !== prev.projects ||
+          state.inbox !== prev.inbox ||
+          state.unassignedTasks !== prev.unassignedTasks
+        ) {
+          scheduleSave(uidRef.current)
+        }
+      })
+    }
+
+    let unsubAuth: (() => void) | null = null
+    let unsubHydrate: (() => void) | null = null
+
+    function bootstrap() {
+      unsubAuth = onAuthStateChanged(auth, (user) => {
+        if (cancelled) return
+        if (!user) {
+          ensureAnonymousSession()
+          return
+        }
+        void startSyncForUid(user.uid).catch((err) => {
+          console.error('[sync] start failed', err)
+          setStatus('error')
+        })
+      })
+    }
+
+    if (useAppStore.persist.hasHydrated()) {
+      bootstrap()
+    } else {
+      unsubHydrate = useAppStore.persist.onFinishHydration(() => {
+        if (cancelled) return
+        bootstrap()
+      })
+    }
 
     return () => {
-      unsubSnapshot?.()
-      unsubStore()
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      cancelled = true
+      unsubAuth?.()
+      unsubHydrate?.()
+      teardownSync()
     }
   }, [])
 

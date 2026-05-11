@@ -124,6 +124,16 @@
 
 ---
 
+### 2026-05-11 (5) / Cursor
+**作業内容（v0.3.2）**
+- **原因説明**: Firebase 匿名認証はブラウザごとに別 UID。`users/{uid}/data/main` が端末ごとに分かれるため、「同期済み」でも他端末とは別データだった。
+- **対策**: 設定に Google 連携（`linkWithPopup`）と 2 台目用ログイン（`signOut` + `signInWithPopup`）を追加。承認済みドメインの注意書きを設定画面に記載。
+- **技術**: `useFirestoreSync` を `persist.onFinishHydration` 後に開始。`onAuthStateChanged` で UID 変更時に購読し直し。Google ログインフロー中の匿名割り込み防止用 `pendingGoogleSignIn` を追加。
+
+**ユーザー作業**
+- Firebase コンソール: Authentication → Sign-in method → **Google を有効化**
+- Authentication → 設定 → 承認済みドメインに `casa2024takayama.github.io` と `localhost` を追加
+
 ### 2026-05-11 (4) / Cursor (Claude Sonnet 4.5)
 **作業内容（Firebase Firestore 同期導入）**
 - `firebase` パッケージをインストール
