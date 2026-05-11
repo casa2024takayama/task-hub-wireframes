@@ -105,8 +105,32 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       projects: DEMO_PROJECTS,
       inbox: [
-        { id: 'ib1', rawText: '高山さんから：来週の勉強会でLT枠空いてるので5分で話してほしい。テーマ自由。返事は水曜日まで。', createdAt: new Date(Date.now() - 3600000).toISOString() },
-        { id: 'ib2', rawText: '経費精算の領収書を経理に提出してください（今月末締め）', createdAt: new Date(Date.now() - 7200000).toISOString() },
+        {
+          id: 'ib1',
+          rawText: '高山さんから：来週の勉強会でLT枠空いてるので5分で話してほしい。テーマ自由。返事は水曜日まで。',
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
+        },
+        {
+          id: 'ib2',
+          rawText: '経費精算の領収書を経理に提出してください（今月末締め）',
+          createdAt: new Date(Date.now() - 7200000).toISOString(),
+        },
+        // AI自動振り分けデモ用サンプル（50文字以上）
+        {
+          id: 'ai-demo-1',
+          rawText: '【Web担当者へ】サイトリニューアルのトップページ案を今週金曜日17時までにデザイナーへフィードバックしてください。確認ポイントはファーストビューのコピーとCTAボタンの色です。',
+          createdAt: new Date(Date.now() - 300000).toISOString(),
+        },
+        {
+          id: 'ai-demo-2',
+          rawText: 'お疲れ様です。来週月曜の社内勉強会ですが、発表スライドを事前に共有フォルダへアップしておいてもらえますか？参加者が予習できるよう、木曜日中にお願いしたいです。',
+          createdAt: new Date(Date.now() - 600000).toISOString(),
+        },
+        {
+          id: 'ai-demo-3',
+          rawText: '高山様、先日ご依頼いただいたXアカウント向けの投稿文3パターンを作成しました。内容確認の上、どれを使うか今月25日までにご連絡ください。修正が必要な場合もお気軽にどうぞ。',
+          createdAt: new Date(Date.now() - 900000).toISOString(),
+        },
       ],
       unassignedTasks: [],
 
