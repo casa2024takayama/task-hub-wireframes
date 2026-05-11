@@ -9,6 +9,13 @@
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-05-11
+
+### 修正
+- AI モデルを `gemini-2.5-flash`（非対応）→ `gemini-2.0-flash`（Firebase AI Logic 正式対応）に変更
+- AI エラー時にエラー内容のテキストと「再解析する」ボタンを表示
+- `SuggestionBadge` が未開封アイテムでも「AI 解析中…」と出てしまうバグを修正（`suggestion === null` の間はバッジ非表示）
+
 ## [0.4.0] — 2026-05-11
 
 ### 追加

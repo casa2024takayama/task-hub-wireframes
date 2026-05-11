@@ -14,6 +14,15 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.4.1',
+    date: '2026-05-11',
+    lines: [
+      'AI モデルを gemini-2.0-flash に修正（Firebase AI Logic 正式対応モデル）',
+      'AI エラー時にエラー内容と再解析ボタンを表示',
+      'AI バッジ：未開封アイテムは「解析中」と出ないよう修正',
+    ],
+  },
+  {
     version: '0.4.0',
     date: '2026-05-11',
     lines: [

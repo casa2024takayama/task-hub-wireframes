@@ -2,7 +2,9 @@ import { getAI, getGenerativeModel, GoogleAIBackend, Schema, type GenerativeMode
 import { firebaseApp } from './firebase'
 import type { InboxSuggestion, Project, TaskSize } from '../types'
 
-const MODEL_NAME = 'gemini-2.5-flash'
+// Firebase AI Logic (Google AI バックエンド) で使えるモデル名
+// gemini-2.5-flash は Firebase AI Logic 未対応のため 2.0-flash を使用
+const MODEL_NAME = 'gemini-2.0-flash'
 
 /** これ未満の文字数なら AI 解析をスキップ（短文は誤推定が多いので人間に任せる） */
 export const MIN_TEXT_LENGTH_FOR_AI = 50
@@ -137,7 +139,7 @@ export async function analyzeInboxText({
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    console.warn('[ai] analyze failed', message)
+    console.error('[ai] analyze failed:', message, e)
     return {
       status: 'failed',
       error: message,

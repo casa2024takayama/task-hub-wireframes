@@ -44,6 +44,31 @@ export default function Inbox() {
     setForm((prev) => ({ ...prev, [id]: { ...getForm(id), [key]: value } }))
   }
 
+  function triggerAI(item: InboxItem) {
+    if (requestedIdsRef.current.has(item.id)) return
+    requestedIdsRef.current.add(item.id)
+
+    if (item.rawText.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
+      setInboxSuggestion(item.id, { status: 'skipped' })
+      return
+    }
+
+    setInboxSuggestion(item.id, { status: 'pending' })
+    void analyzeInboxText({ rawText: item.rawText, projects }).then((suggestion) => {
+      setInboxSuggestion(item.id, suggestion)
+    })
+  }
+
+  function handleRetry(id: string) {
+    const item = inbox.find((x) => x.id === id)
+    if (!item) return
+    requestedIdsRef.current.delete(id)
+    setInboxSuggestion(id, { status: 'pending' })
+    void analyzeInboxText({ rawText: item.rawText, projects }).then((suggestion) => {
+      setInboxSuggestion(id, suggestion)
+    })
+  }
+
   // 展開した受信箱アイテムについて、未解析なら AI を呼ぶ
   useEffect(() => {
     if (!expandedId) return
@@ -52,22 +77,10 @@ export default function Inbox() {
 
     // 既に解析済み（成功・失敗・スキップどれでも）なら何もしない
     if (item.suggestion) return
-    // 重複リクエスト防止
-    if (requestedIdsRef.current.has(item.id)) return
-    requestedIdsRef.current.add(item.id)
 
-    // 短文は AI を使わない
-    if (item.rawText.trim().length < MIN_TEXT_LENGTH_FOR_AI) {
-      setInboxSuggestion(item.id, { status: 'skipped' })
-      return
-    }
-
-    setInboxSuggestion(item.id, { status: 'pending' })
-
-    void analyzeInboxText({ rawText: item.rawText, projects }).then((suggestion) => {
-      setInboxSuggestion(item.id, suggestion)
-    })
-  }, [expandedId, inbox, projects, setInboxSuggestion])
+    triggerAI(item)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedId, inbox])
 
   // suggestion が ready になったら、フォームが空のときだけ初期値として流し込む
   useEffect(() => {
@@ -136,7 +149,7 @@ export default function Inbox() {
 
                 {isOpen && (
                   <div className="border-t border-slate-100 bg-slate-50 p-4 space-y-3">
-                    <SuggestionHeader item={item} isAiCandidate={isAiCandidate} projects={projects} aiApplied={f.aiApplied} />
+                    <SuggestionHeader item={item} isAiCandidate={isAiCandidate} projects={projects} aiApplied={f.aiApplied} onRetry={handleRetry} />
 
                     <div>
                       <label className="text-xs text-slate-500 block mb-1">タスクタイトル</label>
@@ -218,14 +231,16 @@ export default function Inbox() {
 function SuggestionBadge({ item, isAiCandidate }: { item: InboxItem; isAiCandidate: boolean }) {
   if (!isAiCandidate) return null
   const s = item.suggestion
-  if (!s || s.status === 'pending') {
+  // まだ開いていない（未解析）→ バッジなし
+  if (!s) return null
+  if (s.status === 'pending') {
     return <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">AI 解析中…</span>
   }
   if (s.status === 'ready') {
-    return <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">AI 提案あり</span>
+    return <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">✨ AI 提案あり</span>
   }
   if (s.status === 'failed') {
-    return <span className="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded">AI 失敗</span>
+    return <span className="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded">AI エラー</span>
   }
   return null
 }
@@ -235,11 +250,13 @@ function SuggestionHeader({
   isAiCandidate,
   projects,
   aiApplied,
+  onRetry,
 }: {
   item: InboxItem
   isAiCandidate: boolean
   projects: Project[]
   aiApplied: boolean
+  onRetry: (id: string) => void
 }) {
   if (!isAiCandidate) {
     return (
@@ -250,10 +267,21 @@ function SuggestionHeader({
   }
   const s = item.suggestion
   if (!s || s.status === 'pending') {
-    return <p className="text-xs text-indigo-600">AI が内容を解析中…</p>
+    return <p className="text-xs text-indigo-600">✨ AI が内容を解析中…しばらくお待ちください</p>
   }
   if (s.status === 'failed') {
-    return <p className="text-xs text-rose-600">AI 解析に失敗（{s.error ?? '原因不明'}）。手で入力してください。</p>
+    return (
+      <div className="bg-rose-50 border border-rose-200 rounded-md px-3 py-2 space-y-1">
+        <p className="text-xs font-semibold text-rose-700">AI 解析に失敗しました</p>
+        <p className="text-[11px] text-rose-600 break-all">{s.error ?? '原因不明'}</p>
+        <button
+          onClick={() => onRetry(item.id)}
+          className="text-[11px] text-rose-700 underline"
+        >
+          再解析する
+        </button>
+      </div>
+    )
   }
   if (s.status === 'skipped') {
     return <p className="text-xs text-slate-500">AI 解析はスキップされました。</p>
@@ -263,7 +291,7 @@ function SuggestionHeader({
   return (
     <div className="text-xs text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-md px-3 py-2 space-y-0.5">
       <p className="font-semibold">
-        AI 提案 {aiApplied && <span className="text-[10px] font-normal text-indigo-500">（フォームに反映済み）</span>}
+        ✨ AI 提案 {aiApplied && <span className="text-[10px] font-normal text-indigo-500">（フォームに反映済み）</span>}
       </p>
       <p>
         プロジェクト: <span className="font-mono">{projectName}</span> ／ サイズ:{' '}
