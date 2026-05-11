@@ -74,17 +74,22 @@
 - `--no-verify` 禁止。`--amend` は直前のコミットがプッシュ済みなら禁止。
 - ユーザーが明示的に指示しない限り `git push` しない。
 
-### バージョン管理（Semantic Versioning 緩め運用）
-- **一次情報は `package.json` の `"version"`**。Vite が `__APP_VERSION__` として埋め込み、設定画面 (`/settings`) に表示される。
-- ユーザーが体感できる変更（画面追加、UI 改修、データモデル変更、バグ修正）を入れたら **必ず以下を実施**:
-  1. `CHANGELOG.md` の `[Unreleased]` 配下に行を追記
-  2. キリの良いタイミングで `package.json` の version をバンプ
-     - 機能追加 → minor (0.X.0)
-     - バグ修正のみ → patch (0.0.X)
-     - 破壊的変更 / データモデル不整合 → 早期 1.0.0 までは minor で許容、それ以降は major
-  3. `CHANGELOG.md` の `[Unreleased]` を新しいバージョン見出しに昇格させ、日付を入れる
-  4. `Settings.tsx` の `RECENT_CHANGES` 配列にも新バージョンを追加（直近 2〜3 件のみ表示）
-- データモデルを変更したら、ストアの `persist({ name, version })` の version もバンプし、必要なら migrate を書く（小さい間は破壊的でも可。WORKLOG に記録すること）。
+### バージョン管理（厳密運用 — 更新の取りこぼし防止）
+- **一次情報は `package.json` の `"version"`**。Vite が `__APP_VERSION__` として埋め込み、ヘッダーと設定画面 (`/settings`) に表示される。
+- **原則: ユーザーが体感できる変更を含むコミットを作るたびに `package.json` の version を必ずバンプする。**「あとでまとめて」は禁止（更新したか分からなくなる）。
+- バンプ規則（MVP 段階の運用）:
+  - 機能追加・UI 改修・UX 変更 → **patch (0.x.Y)** をバンプ
+  - 機能群がまとまった節目 → minor (0.Y.0) に昇格
+  - データモデル変更や破壊的変更 → minor (0.Y.0) + 移行メモを WORKLOG に必須
+  - 1.0.0 以降は SemVer 厳密運用に切り替える
+- **コミット 1 つにつき version 1 つ。** 1 コミット = 1 patch を原則にする。
+- 必須の付随作業（バンプと同時に行う）:
+  1. `CHANGELOG.md` の `[Unreleased]` 配下に変更内容を追記
+  2. リリース確定時に `[Unreleased]` を新しいバージョン見出し（日付付き）に昇格
+  3. `src/pages/Settings.tsx` の `RECENT_CHANGES` 配列にも新バージョンを追加（最新が先頭。表示は直近 3 件のみ）
+  4. コミットメッセージの末尾に `(v0.X.Y)` を入れる（例: `fix: IME 誤登録を防止 (v0.3.1)`）
+- データモデルを変更したら、ストアの `persist({ name, version })` の version もバンプし、必要なら migrate を書く。WORKLOG に変更点と影響範囲を必ず記録。
+- ドキュメントのみの変更（AGENTS.md / WORKLOG.md など）は version バンプ不要。コミットメッセージは `docs:` プレフィックスにする。
 
 ---
 
