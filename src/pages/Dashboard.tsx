@@ -134,15 +134,9 @@ export default function Dashboard() {
           ref={textareaRef}
           value={pasteText}
           onChange={(e) => setPasteText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault()
-              handleCapture()
-            }
-          }}
           className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:border-indigo-400 resize-none"
           rows={2}
-          placeholder="ペースト → Enter か「受信箱へ」ボタンで保存"
+          placeholder="ここに入力 → 「受信箱へ」ボタンで保存"
         />
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-slate-400">後で振り分けOK。とにかく忘れない場所へ。</span>

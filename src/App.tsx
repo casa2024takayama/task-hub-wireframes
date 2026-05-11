@@ -8,6 +8,9 @@ import ProjectDetail from './pages/ProjectDetail'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
 
+const APP_VERSION =
+  typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
+
 const WEEKDAY_JP = ['日', '月', '火', '水', '木', '金', '土']
 
 function formatNow(d: Date) {
@@ -65,8 +68,9 @@ export default function App() {
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 h-12 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <NavLink to="/" className="text-base font-bold text-slate-800 shrink-0">
+            <NavLink to="/" className="text-base font-bold text-slate-800 shrink-0 flex items-baseline gap-1">
               タスクハブ
+              <span className="text-[10px] font-mono font-normal text-slate-400">v{APP_VERSION}</span>
             </NavLink>
             <span className="text-xs text-slate-500 font-mono tabular-nums truncate">
               {formatNow(now)}

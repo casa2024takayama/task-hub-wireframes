@@ -7,6 +7,16 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.3.0',
+    date: '2026-05-11',
+    lines: [
+      'Firestore でクロスデバイス同期（リアルタイム）',
+      'ヘッダーに同期ステータスドット表示',
+      '入力欄の Enter 送信を廃止（IME 誤登録対策）',
+      '設定画面のバージョン表示を大型化',
+    ],
+  },
+  {
     version: '0.2.0',
     date: '2026-05-11',
     lines: [
@@ -26,6 +36,8 @@ const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
     ],
   },
 ]
+
+const LAST_UPDATED = RECENT_CHANGES[0].date
 
 function formatTimestamp() {
   const d = new Date()
@@ -155,19 +167,31 @@ export default function Settings() {
       </section>
 
       {/* アプリ情報 */}
-      <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
+      <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
         <h2 className="text-sm font-bold text-slate-700">アプリ情報</h2>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-500">バージョン</span>
-          <span className="font-mono text-slate-800">v{APP_VERSION}</span>
+
+        {/* バージョンを大きく目立たせる */}
+        <div className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-indigo-100 rounded-xl p-5 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-500 mb-1">現在のバージョン</p>
+            <p className="text-3xl font-mono font-bold text-indigo-700 tracking-tight">v{APP_VERSION}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-slate-500 mb-1">最終更新</p>
+            <p className="text-sm font-mono text-slate-700">{LAST_UPDATED}</p>
+          </div>
         </div>
-        <div className="border-t border-slate-100 pt-3">
+
+        <div>
           <p className="text-xs font-semibold text-slate-500 mb-2">更新履歴（直近）</p>
           <div className="space-y-3">
-            {RECENT_CHANGES.map((c) => (
+            {RECENT_CHANGES.map((c, idx) => (
               <div key={c.version} className="text-xs">
                 <p className="font-mono text-slate-700">
                   v{c.version} <span className="text-slate-400">— {c.date}</span>
+                  {idx === 0 && (
+                    <span className="ml-2 text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">最新</span>
+                  )}
                 </p>
                 <ul className="list-disc list-inside text-slate-600 mt-1 space-y-0.5">
                   {c.lines.map((line) => (
