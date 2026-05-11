@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, NavLink } from 'react-router-dom'
 import { useAppStore } from './store'
+import { useFirestoreSync, type SyncStatus } from './lib/useFirestoreSync'
 import Dashboard from './pages/Dashboard'
 import Inbox from './pages/Inbox'
 import ProjectDetail from './pages/ProjectDetail'
@@ -35,22 +36,42 @@ function useNow() {
   return now
 }
 
+const SYNC_INDICATOR: Record<SyncStatus, { dot: string; label: string }> = {
+  init:    { dot: 'bg-slate-300 animate-pulse', label: '接続中…' },
+  synced:  { dot: 'bg-emerald-400',             label: '同期済み' },
+  saving:  { dot: 'bg-amber-400 animate-pulse', label: '保存中…' },
+  offline: { dot: 'bg-rose-400',                label: 'オフライン' },
+  error:   { dot: 'bg-rose-500',                label: 'エラー' },
+}
+
+function SyncBadge({ status }: { status: SyncStatus }) {
+  const { dot, label } = SYNC_INDICATOR[status]
+  return (
+    <span className="flex items-center gap-1" title={label}>
+      <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${dot}`} />
+      <span className="text-[10px] text-slate-400 hidden sm:inline">{label}</span>
+    </span>
+  )
+}
+
 export default function App() {
   const inbox = useAppStore((s) => s.inbox)
   const now = useNow()
+  const { status } = useFirestoreSync()
 
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Top nav */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 h-12 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
             <NavLink to="/" className="text-base font-bold text-slate-800 shrink-0">
               タスクハブ
             </NavLink>
             <span className="text-xs text-slate-500 font-mono tabular-nums truncate">
               {formatNow(now)}
             </span>
+            <SyncBadge status={status} />
           </div>
           <nav className="flex gap-3 text-sm shrink-0">
             <NavLink

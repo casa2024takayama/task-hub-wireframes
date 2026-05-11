@@ -124,4 +124,51 @@
 
 ---
 
+### 2026-05-11 (4) / Cursor (Claude Sonnet 4.5)
+**作業内容（Firebase Firestore 同期導入）**
+- `firebase` パッケージをインストール
+- `src/lib/firebase.ts` 新規作成：Firebase 初期化・匿名認証・Firestore 参照ヘルパー・オフラインキャッシュ (`enableIndexedDbPersistence`)
+- `src/lib/useFirestoreSync.ts` 新規作成：Zustand ↔ Firestore のリアルタイム同期フック
+  - 匿名認証後、`users/{uid}/data/main` を `onSnapshot` でサブスクライブ
+  - Zustand のデータ変更を 1.5 秒デバウンスで Firestore に保存
+  - 初回起動時に Firestore が空なら localStorage データをアップロード
+- `App.tsx` に `useFirestoreSync` を組み込み
+- ヘッダーに同期ステータスドット（接続中 / 同期済み / 保存中 / オフライン / エラー）を追加
+- `.env.local` に Firebase 設定値を記載（git 管理外）
+- `.env.local.example` を新規作成（テンプレート）
+- `deploy.yml` に GitHub Actions Secrets からの env 注入を追加
+- `vite.config.ts` に Firebase/React のコード分割設定を追加
+
+**GitHub Actions Secrets の設定手順**（デプロイを動かすために必要）
+1. https://github.com/casa2024takayama/task-hub-wireframes/settings/secrets/actions を開く
+2. 「New repository secret」で以下の 6 つを追加:
+   - `VITE_FIREBASE_API_KEY`
+   - `VITE_FIREBASE_AUTH_DOMAIN`
+   - `VITE_FIREBASE_PROJECT_ID`
+   - `VITE_FIREBASE_STORAGE_BUCKET`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+   - `VITE_FIREBASE_APP_ID`
+3. 値は `.env.local` の内容と同じ
+
+**Firebase コンソールで必要な設定**（まだやっていない場合）
+- Authentication → Sign-in method → **「匿名」を有効化**（必須）
+- Firestore のセキュリティルールは現在テストモード（30日後に期限切れ）
+  → 本番化前に以下のルールに変更すること:
+  ```
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      match /users/{uid}/data/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+  ```
+
+**次のエージェントへの申し送り**
+- `.env.local` は git 管理外なので、clone 後は必ず作成すること（`.env.local.example` を参照）
+- GitHub Actions Secrets が設定されるまで、GitHub Pages のビルドは Firebase env なしで動く（ローカル動作は OK）
+- `enableIndexedDbPersistence` は Firebase v10 で非推奨だが動作には問題なし。将来的に `initializeFirestore` + `persistentLocalCache()` に移行を検討
+- 匿名認証の uid はブラウザ/デバイス固有。ログアウト・クリアすると uid が変わりデータが切り離される（MVP 段階では問題なし）
+
 <!-- 以下、新しいセッションごとに同じフォーマットで追記してください -->
