@@ -223,3 +223,34 @@
   → 本番化・公開前に Firebase App Check を設定して API 不正利用を防ぐこと
 - `gemini-2.0-flash` は 2026-06-01 に廃止予定。現在は `gemini-2.5-flash-lite` を使用
 - Firestore セキュリティルールのテストモード期限に注意（プロジェクト作成から30日）
+
+---
+
+## 2026-05-11（深夜）/ Cursor (Claude Opus 4.7)
+
+### やったこと
+- **v0.5.0 リリース: タスクに「依頼者」フィールドを追加**（仕様議論 → 実装まで一気通貫）
+  - 設計議論の決定事項（論点1〜4）:
+    - Q1: 依頼者は自由入力 + `<datalist>` で過去値サジェスト（表記揺れは運用で吸収）
+    - Q2: アイデアは「`requestedBy === '自分'`」というタスクとして登録（型は同じ）
+    - 論点3: 自分発は通知対象外（Dashboard 上部「直近の小タスク」帯から除外）
+    - 論点4: アイデアは案件プロジェクトに直接入れる（横断アイデアは「アイデア帳」を別途）
+- 変更ファイル:
+  - `mvp-spec.md`: データモデルと通知ルール更新
+  - `src/types/index.ts`: `Task.requestedBy`, `InboxSuggestion.requestedBy` を追加
+  - `src/store/index.ts`: persist version を 2 にバンプ + migration（既存タスクに `requestedBy: null` 補完）
+  - `src/lib/ai.ts`: Gemini プロンプト/スキーマに requestedBy 推測を追加
+  - `src/pages/Inbox.tsx`: フォームに依頼者欄（datalist + 「自分」ボタン）
+  - `src/pages/ProjectDetail.tsx`: タスク追加フォームに依頼者欄、タスク行に表示
+  - `src/pages/Dashboard.tsx`: `RequesterBadge` で `💡 アイデア` / `from △△さん` を表示。自分発は通知帯から除外
+  - `CHANGELOG.md` / `src/pages/Settings.tsx` (RECENT_CHANGES): v0.5.0 追記
+
+### データモデル変更の影響
+- `persist` の version を 1 → 2 にバンプ。既存ユーザーのデータには `requestedBy: null` を自動補完するので互換性あり
+- Firestore 側の既存ドキュメントも同じ migration が走る（onSnapshot で読み込み → migrate → 書き戻し）
+
+### 残ったタスク・申し送り
+- **次のステップ候補（v0.6 想定）**: Reports に「依頼者別の件数（今月・先月）」グラフを追加
+  - これが Q1（依頼者フィールド追加）の本来の目的（誰の依頼を何件こなしているか可視化）
+- 表記揺れ（「田中」「田中さん」など）はまず観察してから対応。完璧な正規化はしない方針
+- AI プロンプトに「敬称付きで統一」と指示済みなので、AI 経由なら揃いやすい
