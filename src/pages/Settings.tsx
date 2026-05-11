@@ -7,6 +7,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.3.1',
+    date: '2026-05-11',
+    lines: [
+      'index.html に no-cache メタタグを追加（古い JS が残るのを防止）',
+      '設定画面に「最新版を取得」ボタンを追加（キャッシュクリア + 再読込）',
+    ],
+  },
+  {
     version: '0.3.0',
     date: '2026-05-11',
     lines: [
@@ -24,15 +32,6 @@ const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
       'ヘッダーに現在日時表示',
       'レポートに最近完了したタスク一覧',
       'バージョン管理（CHANGELOG.md）運用開始',
-    ],
-  },
-  {
-    version: '0.1.0',
-    date: '2026-05-11',
-    lines: [
-      'HTML ワイヤーフレームから React 移植',
-      '貼り付け → 受信箱 → タスク化フロー',
-      '未割当タスクの保持と割り当て',
     ],
   },
 ]
@@ -98,6 +97,21 @@ export default function Settings() {
     clearAll()
     setShowClearConfirm(false)
     setMessage({ type: 'success', text: '全データをクリアしました' })
+  }
+
+  async function handleHardReload() {
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys()
+        await Promise.all(keys.map((k) => caches.delete(k)))
+      }
+    } catch (e) {
+      console.warn('cache clear failed', e)
+    }
+    // クエリ文字列を付け替えて HTML から取り直す
+    const url = new URL(window.location.href)
+    url.searchParams.set('_t', Date.now().toString())
+    window.location.replace(url.toString())
   }
 
   return (
@@ -180,6 +194,22 @@ export default function Settings() {
             <p className="text-xs text-slate-500 mb-1">最終更新</p>
             <p className="text-sm font-mono text-slate-700">{LAST_UPDATED}</p>
           </div>
+        </div>
+
+        {/* 最新版を取得 */}
+        <div className="flex items-start justify-between gap-4 pt-1">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-slate-800">最新版を取得</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              「ヘッダーのバージョンが上がらない」「新機能が反映されない」と感じたらこれを押すとキャッシュをクリアして再読込します
+            </p>
+          </div>
+          <button
+            onClick={handleHardReload}
+            className="bg-white border border-indigo-600 text-indigo-600 text-sm px-4 py-1.5 rounded-lg hover:bg-indigo-50 transition shrink-0"
+          >
+            再読込
+          </button>
         </div>
 
         <div>
