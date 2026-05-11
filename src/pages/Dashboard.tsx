@@ -105,19 +105,12 @@ export default function Dashboard() {
   )
   const activeUnassigned = unassignedTasks.filter((t) => !t.done)
 
-  function handleCapture(text = pasteText) {
-    const trimmed = text.trim()
-    if (!trimmed) return
-    addToInbox(trimmed)
+  function handleCapture() {
+    const text = pasteText.trim()
+    if (!text) return
+    addToInbox(text)
     setPasteText('')
     textareaRef.current?.focus()
-  }
-
-  function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
-    const pasted = e.clipboardData.getData('text')
-    if (!pasted.trim()) return
-    e.preventDefault()
-    handleCapture(pasted)
   }
 
   function handleNewProject(e: React.FormEvent) {
@@ -141,7 +134,6 @@ export default function Dashboard() {
           ref={textareaRef}
           value={pasteText}
           onChange={(e) => setPasteText(e.target.value)}
-          onPaste={handlePaste}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
@@ -150,7 +142,7 @@ export default function Dashboard() {
           }}
           className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:border-indigo-400 resize-none"
           rows={2}
-          placeholder="ペーストで即、受信箱へ。手打ちは Enter か「受信箱へ」ボタン"
+          placeholder="ペースト → Enter か「受信箱へ」ボタンで保存"
         />
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-slate-400">後で振り分けOK。とにかく忘れない場所へ。</span>
@@ -161,7 +153,7 @@ export default function Dashboard() {
               </Link>
             )}
             <button
-              onClick={() => handleCapture()}
+              onClick={handleCapture}
               disabled={!pasteText.trim()}
               className="bg-indigo-600 disabled:opacity-40 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition"
             >
