@@ -124,6 +124,24 @@
 
 ---
 
+### 2026-05-11 (6) / Cursor
+**作業内容（v0.4.0 - AI 自動振り分け）**
+- `src/lib/ai.ts` を新規作成し、Firebase AI Logic (Google AI バックエンド / Gemini 2.5 Flash) を呼び出す `analyzeInboxText` を実装
+- 受信箱アイテム展開時に **50 文字以上のテキストだけ** AI を呼ぶ。短文は無条件でスキップ
+- 構造化出力（responseSchema）で title / projectId / size / dueDate / reason を取得
+- 結果は `InboxItem.suggestion` に保存し、Firestore 同期されるので **他端末でも再利用される**
+- 失敗・スキップ時は手入力にフォールバック（提案バッジは状態に応じて変化）
+- 設定画面に Firebase AI Logic の有効化手順を追記
+- 受信箱画面の useEffect で展開時に解析・別の useEffect で `ready` 状態かつフォーム未編集なら初期値反映
+
+**ユーザー作業**
+- Firebase コンソール「構築 → AI Logic」を開き **Gemini Developer API を有効化**
+- モデルは `gemini-2.5-flash`（コード内で指定）
+
+**注意**
+- ローカル復元前に Firestore から旧データが来ると AI suggestion が `pending` で固まる可能性 → `requestedIdsRef` で多重リクエストを防ぐ
+- `Schema.enumString` を使い size の値域を制限。`projectId` は文字列 "null" で「該当なし」を表現し、コード側で `null` に正規化
+
 ### 2026-05-11 (5) / Cursor
 **作業内容（v0.3.2）**
 - **原因説明**: Firebase 匿名認証はブラウザごとに別 UID。`users/{uid}/data/main` が端末ごとに分かれるため、「同期済み」でも他端末とは別データだった。

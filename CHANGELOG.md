@@ -9,6 +9,22 @@
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-05-11
+
+### 追加
+- **AI 自動振り分け（Firebase AI Logic / Gemini）**: 受信箱に貼り付けたテキストが 50 文字以上のとき、Gemini が自動で
+  タスクタイトル / プロジェクト（既存のもの） / サイズ / 締切日 を推測し、振り分けフォームの初期値として反映
+  - 結果は `InboxItem.suggestion` に保存し、Firestore 同期されるので他端末でも再利用される
+  - 解析中・失敗・成功・スキップの状態をバッジ表示
+  - 50 文字未満は AI を呼ばず手入力にフォールバック
+- 設定画面に Firebase AI Logic の有効化手順を追記
+- 型: `InboxSuggestion` / `InboxSuggestionStatus` を追加
+- ストア: `setInboxSuggestion(id, suggestion)` を追加
+
+### 注意
+- Firebase コンソールで「AI Logic → Gemini Developer API」を有効化する必要あり
+- 失敗時は手動入力にフォールバックする設計
+
 ## [0.3.2] — 2026-05-11
 
 ### 追加

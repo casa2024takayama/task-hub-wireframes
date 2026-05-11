@@ -20,6 +20,7 @@ export default defineConfig(({ command }) => ({
       output: {
         manualChunks: {
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          'firebase-ai': ['firebase/ai'],
           react: ['react', 'react-dom', 'react-router-dom'],
         },
       },

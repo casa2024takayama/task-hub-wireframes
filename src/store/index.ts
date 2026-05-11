@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Project, Task, InboxItem } from '../types'
+import type { Project, Task, InboxItem, InboxSuggestion } from '../types'
 
 function uid() {
   return crypto.randomUUID()
@@ -14,6 +14,7 @@ interface AppState {
   // Inbox
   addToInbox: (rawText: string) => void
   removeFromInbox: (id: string) => void
+  setInboxSuggestion: (id: string, suggestion: InboxSuggestion) => void
   promoteInboxItem: (id: string, opts: { title: string; projectId: string | null; size: 'small' | 'large'; dueDate: string | null }) => void
 
   // Projects
@@ -113,6 +114,11 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ inbox: [{ id: uid(), rawText, createdAt: new Date().toISOString() }, ...s.inbox] })),
 
       removeFromInbox: (id) => set((s) => ({ inbox: s.inbox.filter((x) => x.id !== id) })),
+
+      setInboxSuggestion: (id, suggestion) =>
+        set((s) => ({
+          inbox: s.inbox.map((x) => (x.id === id ? { ...x, suggestion } : x)),
+        })),
 
       promoteInboxItem: (id, { title, projectId, size, dueDate }) => {
         const { inbox, projects, unassignedTasks } = get()

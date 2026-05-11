@@ -14,6 +14,15 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.4.0',
+    date: '2026-05-11',
+    lines: [
+      '受信箱の AI 自動振り分け（Gemini, 50 文字以上のときだけ動作）',
+      '提案結果は受信箱アイテムに保存され、端末をまたいで再利用',
+      '提案状態（解析中 / 提案あり / 失敗）をバッジで表示',
+    ],
+  },
+  {
     version: '0.3.2',
     date: '2026-05-11',
     lines: [
@@ -28,16 +37,6 @@ const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
     lines: [
       'index.html に no-cache メタタグを追加（古い JS が残るのを防止）',
       '設定画面に「最新版を取得」ボタンを追加（キャッシュクリア + 再読込）',
-    ],
-  },
-  {
-    version: '0.3.0',
-    date: '2026-05-11',
-    lines: [
-      'Firestore でクロスデバイス同期（リアルタイム）',
-      'ヘッダーに同期ステータスドット表示',
-      '入力欄の Enter 送信を廃止（IME 誤登録対策）',
-      '設定画面のバージョン表示を大型化',
     ],
   },
 ]
@@ -227,6 +226,25 @@ export default function Settings() {
           >
             Google でログイン（他端末と同じデータ）
           </button>
+        </div>
+      </section>
+
+      {/* AI 自動振り分け（Firebase AI Logic） */}
+      <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
+        <h2 className="text-sm font-bold text-slate-700">AI 自動振り分け（受信箱）</h2>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          受信箱に貼り付けたテキストが <strong>50 文字以上</strong> のとき、Gemini が自動で
+          タスクタイトル / プロジェクト / サイズ / 締切日 を推測してフォームに反映します。
+          短い文はそのまま手入力です（短文は誤推定が多いため）。
+        </p>
+        <div className="rounded-md bg-slate-50 border border-slate-200 p-3 text-[11px] text-slate-600 space-y-1">
+          <p className="font-semibold text-slate-700">Firebase コンソールでの一度きりの設定</p>
+          <ol className="list-decimal list-inside space-y-0.5">
+            <li>「構築 → AI Logic」を開く</li>
+            <li>「Gemini Developer API」を選択 → 「有効にする」</li>
+            <li>使用モデルは <code className="bg-slate-100 px-1 rounded">gemini-2.5-flash</code></li>
+          </ol>
+          <p className="text-slate-400">無料枠の範囲内で動作します。失敗時は手入力にフォールバック。</p>
         </div>
       </section>
 
