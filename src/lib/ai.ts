@@ -3,8 +3,9 @@ import { firebaseApp } from './firebase'
 import type { InboxSuggestion, Project, TaskSize } from '../types'
 
 // Firebase AI Logic (Google AI バックエンド) で使えるモデル名
-// gemini-1.5-flash: 無料枠が安定（15 RPM / 1,500 RPD）
-const MODEL_NAME = 'gemini-1.5-flash'
+// gemini-2.0-flash は 2026-06-01 廃止予定 → gemini-2.5-flash-lite が後継
+// ドキュメント推奨: gemini-2.5-flash-lite (2026-05 時点)
+const MODEL_NAME = 'gemini-2.5-flash-lite'
 
 /** これ未満の文字数なら AI 解析をスキップ（短文は誤推定が多いので人間に任せる） */
 export const MIN_TEXT_LENGTH_FOR_AI = 50
