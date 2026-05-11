@@ -135,7 +135,7 @@ export default function Dashboard() {
           value={pasteText}
           onChange={(e) => setPasteText(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault()
               handleCapture()
             }
