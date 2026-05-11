@@ -12,6 +12,7 @@ export default function ProjectDetail() {
   const [newTask, setNewTask] = useState('')
   const [newTaskSize, setNewTaskSize] = useState<'small' | 'large'>('small')
   const [newTaskDue, setNewTaskDue] = useState('')
+  const [newTaskRequestedBy, setNewTaskRequestedBy] = useState('')
   const [newItem, setNewItem] = useState('')
 
   if (!project) {
@@ -35,12 +36,28 @@ export default function ProjectDetail() {
     return 'text-slate-500'
   }
 
+  // 過去タスクから依頼者候補を集める（datalist サジェスト用）
+  const requestedBySuggestions = (() => {
+    const set = new Set<string>(['自分'])
+    for (const p of projects) {
+      for (const t of p.tasks) if (t.requestedBy) set.add(t.requestedBy)
+    }
+    return Array.from(set)
+  })()
+
   function handleAddTask(e: React.FormEvent) {
     e.preventDefault()
     if (!newTask.trim()) return
-    addTask(project!.id, newTask.trim(), newTaskSize, newTaskDue || null)
+    addTask(
+      project!.id,
+      newTask.trim(),
+      newTaskSize,
+      newTaskDue || null,
+      newTaskRequestedBy.trim() || null
+    )
     setNewTask('')
     setNewTaskDue('')
+    setNewTaskRequestedBy('')
   }
 
   function handleAddItem(e: React.FormEvent) {
@@ -98,28 +115,51 @@ export default function ProjectDetail() {
       <section>
         <h2 className="text-sm font-bold text-slate-700 mb-3">タスク</h2>
 
-        <form onSubmit={handleAddTask} className="flex gap-2 mb-3 flex-wrap">
-          <input
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            placeholder="タスクを追加..."
-            className="flex-1 min-w-32 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400"
-          />
-          <select
-            value={newTaskSize}
-            onChange={(e) => setNewTaskSize(e.target.value as 'small' | 'large')}
-            className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none"
-          >
-            <option value="small">小（30分）</option>
-            <option value="large">大</option>
-          </select>
-          <input
-            type="date"
-            value={newTaskDue}
-            onChange={(e) => setNewTaskDue(e.target.value)}
-            className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none"
-          />
-          <button type="submit" className="bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-lg hover:bg-indigo-700">追加</button>
+        <form onSubmit={handleAddTask} className="space-y-2 mb-3">
+          <div className="flex gap-2 flex-wrap">
+            <input
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              placeholder="タスクを追加..."
+              className="flex-1 min-w-32 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400"
+            />
+            <select
+              value={newTaskSize}
+              onChange={(e) => setNewTaskSize(e.target.value as 'small' | 'large')}
+              className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none"
+            >
+              <option value="small">小（30分）</option>
+              <option value="large">大</option>
+            </select>
+            <input
+              type="date"
+              value={newTaskDue}
+              onChange={(e) => setNewTaskDue(e.target.value)}
+              className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none"
+            />
+            <button type="submit" className="bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-lg hover:bg-indigo-700">追加</button>
+          </div>
+          <div className="flex gap-2">
+            <input
+              list="proj-req-list"
+              value={newTaskRequestedBy}
+              onChange={(e) => setNewTaskRequestedBy(e.target.value)}
+              placeholder="依頼者（任意）: 田中さん / 自分 など"
+              className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400"
+            />
+            <datalist id="proj-req-list">
+              {requestedBySuggestions.map((v) => (
+                <option key={v} value={v} />
+              ))}
+            </datalist>
+            <button
+              type="button"
+              onClick={() => setNewTaskRequestedBy('自分')}
+              className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 rounded-lg"
+            >
+              自分
+            </button>
+          </div>
         </form>
 
         <div className="space-y-2">
@@ -131,7 +171,14 @@ export default function ProjectDetail() {
                 onChange={() => toggleTask(project.id, t.id)}
                 className="w-4 h-4 accent-indigo-600 shrink-0"
               />
-              <span className="flex-1 text-sm text-slate-800">{t.title}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-slate-800">{t.title}</div>
+                {t.requestedBy && (
+                  <div className="text-[11px] text-slate-500 mt-0.5">
+                    {t.requestedBy === '自分' ? '💡 アイデア' : `from ${t.requestedBy}`}
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className={`text-[10px] px-1.5 py-0.5 rounded ${t.size === 'small' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                   {t.size === 'small' ? '小' : '大'}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore } from '../store'
 import { analyzeInboxText, MIN_TEXT_LENGTH_FOR_AI } from '../lib/ai'
 import type { InboxItem, Project } from '../types'
@@ -8,10 +8,18 @@ interface FormState {
   projectId: string
   size: 'small' | 'large'
   dueDate: string
+  requestedBy: string
   aiApplied: boolean
 }
 
-const EMPTY_FORM: FormState = { title: '', projectId: '', size: 'small', dueDate: '', aiApplied: false }
+const EMPTY_FORM: FormState = {
+  title: '',
+  projectId: '',
+  size: 'small',
+  dueDate: '',
+  requestedBy: '',
+  aiApplied: false,
+}
 
 function applySuggestionToForm(item: InboxItem): FormState | null {
   const s = item.suggestion
@@ -21,6 +29,7 @@ function applySuggestionToForm(item: InboxItem): FormState | null {
     projectId: s.projectId ?? '',
     size: s.size ?? 'small',
     dueDate: s.dueDate ?? '',
+    requestedBy: s.requestedBy ?? '',
     aiApplied: true,
   }
 }
@@ -28,6 +37,7 @@ function applySuggestionToForm(item: InboxItem): FormState | null {
 export default function Inbox() {
   const inbox = useAppStore((st) => st.inbox)
   const projects = useAppStore((st) => st.projects)
+  const unassignedTasks = useAppStore((st) => st.unassignedTasks)
   const removeFromInbox = useAppStore((st) => st.removeFromInbox)
   const promoteInboxItem = useAppStore((st) => st.promoteInboxItem)
   const setInboxSuggestion = useAppStore((st) => st.setInboxSuggestion)
@@ -35,6 +45,16 @@ export default function Inbox() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [form, setForm] = useState<Record<string, FormState>>({})
   const requestedIdsRef = useRef<Set<string>>(new Set())
+
+  // 過去入力された依頼者をユニークに集めて <datalist> サジェストに使う
+  const requestedBySuggestions = useMemo(() => {
+    const set = new Set<string>(['自分'])
+    const allTasks = [...projects.flatMap((p) => p.tasks), ...unassignedTasks]
+    for (const t of allTasks) {
+      if (t.requestedBy) set.add(t.requestedBy)
+    }
+    return Array.from(set)
+  }, [projects, unassignedTasks])
 
   function getForm(id: string): FormState {
     return form[id] ?? EMPTY_FORM
@@ -89,7 +109,11 @@ export default function Inbox() {
       const current = form[item.id]
       const isPristine =
         !current ||
-        (!current.title && !current.projectId && !current.dueDate && !current.aiApplied)
+        (!current.title &&
+          !current.projectId &&
+          !current.dueDate &&
+          !current.requestedBy &&
+          !current.aiApplied)
       if (!isPristine) return
       const next = applySuggestionToForm(item)
       if (next) {
@@ -106,6 +130,7 @@ export default function Inbox() {
       projectId: f.projectId || null,
       size: f.size,
       dueDate: f.dueDate || null,
+      requestedBy: f.requestedBy.trim() || null,
     })
     setExpandedId(null)
   }
@@ -199,6 +224,37 @@ export default function Inbox() {
                           onChange={(e) => setField(item.id, 'dueDate', e.target.value)}
                           className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-indigo-400"
                         />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-slate-500 block mb-1">
+                        依頼者{' '}
+                        <span className="text-slate-400 font-normal">
+                          （任意。「自分」＝アイデア・メモとして扱う）
+                        </span>
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          list={`req-list-${item.id}`}
+                          value={f.requestedBy}
+                          onChange={(e) => setField(item.id, 'requestedBy', e.target.value)}
+                          placeholder="例: 田中さん / 経営会議 / 自分"
+                          className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400"
+                        />
+                        <datalist id={`req-list-${item.id}`}>
+                          {requestedBySuggestions.map((v) => (
+                            <option key={v} value={v} />
+                          ))}
+                        </datalist>
+                        <button
+                          type="button"
+                          onClick={() => setField(item.id, 'requestedBy', '自分')}
+                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 rounded-lg whitespace-nowrap"
+                          title="自分のアイデア・メモとして登録"
+                        >
+                          自分
+                        </button>
                       </div>
                     </div>
 
@@ -297,6 +353,7 @@ function SuggestionHeader({
         プロジェクト: <span className="font-mono">{projectName}</span> ／ サイズ:{' '}
         <span className="font-mono">{s.size}</span> ／ 締切: <span className="font-mono">{s.dueDate ?? '—'}</span>
       </p>
+      <p>依頼者: <span className="font-mono">{s.requestedBy ?? '—'}</span></p>
       {s.reason && <p className="text-[11px] text-indigo-500">理由: {s.reason}</p>}
     </div>
   )

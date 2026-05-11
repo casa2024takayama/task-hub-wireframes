@@ -9,6 +9,25 @@
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-05-11
+
+### 追加
+- **タスクに「依頼者」フィールド** (`Task.requestedBy`) を追加。自由入力で「△△さん」「経営会議」「自分」など何でも書ける
+  - Inbox の振り分けフォーム / プロジェクト詳細のタスク追加フォームに依頼者欄を追加
+  - 過去入力値の `<datalist>` サジェスト（表記揺れを軽減）
+  - 「**自分**」ボタンで 1 タップ入力（＝アイデアとして登録）
+  - AI 自動振り分けが `requestedBy` も推測（「〇〇さん」「経営会議」「自分」を判定）
+- **アイデア（自分発タスク）の視覚区別**
+  - Dashboard / ProjectDetail で `requestedBy === '自分'` のタスクは `💡 アイデア` バッジ
+  - 他人の依頼は `from 〇〇さん` バッジ
+- **通知ルール（論点3）**: Dashboard 上部の「直近の小タスク」帯から自分発タスクを除外
+  - 「依頼の取りこぼし防止」に集中するための設計
+
+### 仕様変更
+- `mvp-spec.md` にデータモデル・通知ルールを更新
+- 型: `Task.requestedBy?: string | null`、`InboxSuggestion.requestedBy?: string | null`
+- ストア: `persist` の version を 2 にバンプ + 既存データに `requestedBy: null` を補完する migration
+
 ## [0.4.1] — 2026-05-11
 
 ### 修正

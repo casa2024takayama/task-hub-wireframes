@@ -14,10 +14,20 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.5.0',
+    date: '2026-05-11',
+    lines: [
+      'タスクに「依頼者」フィールドを追加（自由入力 + 過去値サジェスト）',
+      '「自分」ボタンでアイデア・メモを 1 タップ登録（💡 バッジで視覚区別）',
+      'AI 自動振り分けが依頼者も推測',
+      '直近の小タスク帯はアイデアを除外（依頼取りこぼし防止に集中）',
+    ],
+  },
+  {
     version: '0.4.1',
     date: '2026-05-11',
     lines: [
-      'AI モデルを gemini-2.0-flash に修正（Firebase AI Logic 正式対応モデル）',
+      'AI モデルを gemini-2.5-flash-lite に更新（Firebase AI Logic 正式対応 / 2.0-flash は 2026-06 廃止）',
       'AI エラー時にエラー内容と再解析ボタンを表示',
       'AI バッジ：未開封アイテムは「解析中」と出ないよう修正',
     ],

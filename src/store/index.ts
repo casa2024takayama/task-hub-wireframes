@@ -15,7 +15,16 @@ interface AppState {
   addToInbox: (rawText: string) => void
   removeFromInbox: (id: string) => void
   setInboxSuggestion: (id: string, suggestion: InboxSuggestion) => void
-  promoteInboxItem: (id: string, opts: { title: string; projectId: string | null; size: 'small' | 'large'; dueDate: string | null }) => void
+  promoteInboxItem: (
+    id: string,
+    opts: {
+      title: string
+      projectId: string | null
+      size: 'small' | 'large'
+      dueDate: string | null
+      requestedBy?: string | null
+    }
+  ) => void
 
   // Projects
   addProject: (name: string, type: Project['type']) => void
@@ -23,7 +32,13 @@ interface AppState {
   deleteProject: (id: string) => void
 
   // Tasks
-  addTask: (projectId: string, title: string, size: Task['size'], dueDate: string | null) => void
+  addTask: (
+    projectId: string,
+    title: string,
+    size: Task['size'],
+    dueDate: string | null,
+    requestedBy?: string | null
+  ) => void
   // projectId === null は未割当タスクへの操作を意味する（D-003）
   toggleTask: (projectId: string | null, taskId: string) => void
   deleteTask: (projectId: string | null, taskId: string) => void
@@ -144,11 +159,20 @@ export const useAppStore = create<AppState>()(
           inbox: s.inbox.map((x) => (x.id === id ? { ...x, suggestion } : x)),
         })),
 
-      promoteInboxItem: (id, { title, projectId, size, dueDate }) => {
+      promoteInboxItem: (id, { title, projectId, size, dueDate, requestedBy }) => {
         const { inbox, projects, unassignedTasks } = get()
         const item = inbox.find((x) => x.id === id)
         if (!item) return
-        const newTask: Task = { id: uid(), title, size, dueDate, projectId, done: false, createdAt: new Date().toISOString() }
+        const newTask: Task = {
+          id: uid(),
+          title,
+          size,
+          dueDate,
+          projectId,
+          done: false,
+          createdAt: new Date().toISOString(),
+          requestedBy: requestedBy || null,
+        }
         if (projectId === null) {
           set({
             inbox: inbox.filter((x) => x.id !== id),
@@ -177,11 +201,26 @@ export const useAppStore = create<AppState>()(
 
       deleteProject: (id) => set((s) => ({ projects: s.projects.filter((p) => p.id !== id) })),
 
-      addTask: (projectId, title, size, dueDate) =>
+      addTask: (projectId, title, size, dueDate, requestedBy) =>
         set((s) => ({
           projects: s.projects.map((p) =>
             p.id === projectId
-              ? { ...p, tasks: [...p.tasks, { id: uid(), title, size, dueDate, projectId, done: false, createdAt: new Date().toISOString() }] }
+              ? {
+                  ...p,
+                  tasks: [
+                    ...p.tasks,
+                    {
+                      id: uid(),
+                      title,
+                      size,
+                      dueDate,
+                      projectId,
+                      done: false,
+                      createdAt: new Date().toISOString(),
+                      requestedBy: requestedBy || null,
+                    },
+                  ],
+                }
               : p
           ),
         })),
@@ -278,6 +317,27 @@ export const useAppStore = create<AppState>()(
         set({ projects: [], inbox: [], unassignedTasks: [] })
       },
     }),
-    { name: 'task-hub-storage' }
+    {
+      name: 'task-hub-storage',
+      // v1 → v2: Task に requestedBy フィールドを追加（既存タスクは null 補完）
+      version: 2,
+      migrate: (persisted, fromVersion) => {
+        if (!persisted) return persisted as AppState
+        const state = persisted as Partial<AppState>
+        if (fromVersion < 2) {
+          const fillTask = (t: Task): Task =>
+            'requestedBy' in t ? t : { ...t, requestedBy: null }
+          return {
+            ...state,
+            projects: (state.projects ?? []).map((p) => ({
+              ...p,
+              tasks: (p.tasks ?? []).map(fillTask),
+            })),
+            unassignedTasks: (state.unassignedTasks ?? []).map(fillTask),
+          } as AppState
+        }
+        return state as AppState
+      },
+    }
   )
 )

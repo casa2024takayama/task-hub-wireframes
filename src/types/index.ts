@@ -11,6 +11,8 @@ export interface Task {
   done: boolean
   createdAt: string
   completedAt?: string | null
+  /** 依頼者（自由入力）。「△△さん」「経営会議」「自分」など何でも可。自分発タスク（＝アイデア）は '自分' を入れる。 */
+  requestedBy?: string | null
 }
 
 export interface InboxItem {
@@ -35,6 +37,8 @@ export interface InboxSuggestion {
   size?: TaskSize
   /** モデル提案：締切日 ISO（YYYY-MM-DD）または null */
   dueDate?: string | null
+  /** モデル提案：依頼者（敬称付き「〇〇さん」推奨）。判別不能 or 本人発意なら "自分" */
+  requestedBy?: string | null
   /** モデル提案：判断理由（短いメモ、UI でツールチップ表示など） */
   reason?: string
   /** 解析時の AI バージョン / モデル名 */

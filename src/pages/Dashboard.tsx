@@ -36,6 +36,23 @@ function dueBadge(dueDate: string | null) {
   return null
 }
 
+/** 依頼者バッジ。"自分"=アイデアは黄色、他人の依頼は薄い藍 */
+function RequesterBadge({ requestedBy }: { requestedBy?: string | null }) {
+  if (!requestedBy) return null
+  if (requestedBy === '自分') {
+    return (
+      <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">
+        💡 アイデア
+      </span>
+    )
+  }
+  return (
+    <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+      from {requestedBy}
+    </span>
+  )
+}
+
 function ProjectCard({ project }: { project: Project }) {
   const toggleTask = useAppStore((s) => s.toggleTask)
   const activeTasks = project.tasks.filter((t) => !t.done)
@@ -73,6 +90,7 @@ function ProjectCard({ project }: { project: Project }) {
             />
             <span className="text-xs text-slate-700 truncate">{t.title}</span>
             {t.size === 'small' && <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 rounded shrink-0">小</span>}
+            <RequesterBadge requestedBy={t.requestedBy} />
           </div>
         ))}
         {activeTasks.length > 2 && (
@@ -100,8 +118,14 @@ export default function Dashboard() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const allTasks = projects.flatMap((p) => p.tasks.map((t) => ({ ...t, projectName: p.name })))
+  // 「直近の小タスク」帯は依頼の取りこぼし防止が目的なので、自分発（アイデア）は除外（通知ルールと同じ）
   const urgentTasks = allTasks.filter(
-    (t) => !t.done && t.size === 'small' && t.dueDate && t.dueDate <= tomorrow()
+    (t) =>
+      !t.done &&
+      t.size === 'small' &&
+      t.dueDate &&
+      t.dueDate <= tomorrow() &&
+      t.requestedBy !== '自分'
   )
   const activeUnassigned = unassignedTasks.filter((t) => !t.done)
 
@@ -176,7 +200,7 @@ export default function Dashboard() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-slate-800 truncate">{t.title}</div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       {t.size === 'small' && (
                         <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 rounded">小</span>
                       )}
@@ -184,6 +208,7 @@ export default function Dashboard() {
                       {badge && (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded ${badge.cls}`}>{badge.label}</span>
                       )}
+                      <RequesterBadge requestedBy={t.requestedBy} />
                     </div>
                   </div>
                   <select
@@ -238,7 +263,10 @@ export default function Dashboard() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-slate-800">{t.title}</div>
-                    <div className="text-xs text-slate-500">{t.projectName}</div>
+                    <div className="text-xs text-slate-500 flex items-center gap-1.5 flex-wrap">
+                      <span>{t.projectName}</span>
+                      <RequesterBadge requestedBy={t.requestedBy} />
+                    </div>
                   </div>
                   {badge && (
                     <span className={`text-xs px-2 py-0.5 rounded shrink-0 ${badge.cls}`}>{badge.label}</span>

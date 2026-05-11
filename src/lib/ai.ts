@@ -3,8 +3,8 @@ import { firebaseApp } from './firebase'
 import type { InboxSuggestion, Project, TaskSize } from '../types'
 
 // Firebase AI Logic (Google AI バックエンド) で使えるモデル名
-// gemini-2.0-flash は 2026-06-01 廃止予定 → gemini-2.5-flash-lite が後継
-// ドキュメント推奨: gemini-2.5-flash-lite (2026-05 時点)
+// 2026-05 時点の公式ドキュメント推奨: gemini-2.5-flash-lite
+// (gemini-2.0-flash は 2026-06-01 廃止予定)
 const MODEL_NAME = 'gemini-2.5-flash-lite'
 
 /** これ未満の文字数なら AI 解析をスキップ（短文は誤推定が多いので人間に任せる） */
@@ -35,6 +35,12 @@ function getModel(): GenerativeModel {
           '締切日。明示的に書かれている場合または明らかに推測できる場合のみ YYYY-MM-DD で返す。' +
           '不明な場合は文字列 "null" を返す。今日の日付は別途与えられる。',
       }),
+      requestedBy: Schema.string({
+        description:
+          'このタスクの依頼者。人名なら「〇〇さん」、組織・会議体ならその名称（例: 「経営会議」「広報チーム」）。' +
+          '本人発意（メモ・アイデアなど自分起点）と判断できる場合は文字列 "自分" を返す。' +
+          '判別不能な場合は文字列 "null" を返す。',
+      }),
       reason: Schema.string({
         description: '上記の判断理由を 50 文字以内で要約した日本語のメモ。',
       }),
@@ -57,6 +63,7 @@ interface RawSuggestion {
   projectId?: unknown
   size?: unknown
   dueDate?: unknown
+  requestedBy?: unknown
   reason?: unknown
 }
 
@@ -99,8 +106,8 @@ export async function analyzeInboxText({
 
   const prompt = [
     'あなたは個人の「タスクハブ」アプリの分類アシスタントです。',
-    'ユーザーが受信箱に貼り付けたテキストから、タスクのタイトル・所属プロジェクト・サイズ・締切日を抽出します。',
-    '判断に迷う場合は無理にプロジェクトや締切を埋めず、 "null" を返してください。',
+    'ユーザーが受信箱に貼り付けたテキストから、タスクのタイトル・所属プロジェクト・サイズ・締切日・依頼者を抽出します。',
+    '判断に迷う場合は無理に埋めず、 "null" を返してください。',
     '',
     `今日の日付（ISO）: ${today}`,
     '',
@@ -108,6 +115,12 @@ export async function analyzeInboxText({
     JSON.stringify(projectList, null, 2),
     '',
     'タスクサイズの基準: small は 30 分以内、それより大きいものは large。',
+    '',
+    '依頼者の判定基準:',
+    '- 人名が読み取れる場合は敬称付きで「〇〇さん」と統一（例: 「田中」と書かれていても「田中さん」）',
+    '- 組織・会議体（経営会議、広報チーム、〇〇部 など）はその名称をそのまま',
+    '- 本人のアイデア・メモなど、自分起点と判断できる場合は文字列 "自分"',
+    '- 判別できない場合は文字列 "null"',
     '',
     '受信箱に貼り付けられたテキスト（区切り <<<>>>）：',
     `<<<${trimmed}>>>`,
@@ -126,6 +139,7 @@ export async function analyzeInboxText({
     const size: TaskSize = sizeRaw === 'large' ? 'large' : 'small'
     const dueDateRaw = normalizeStringOrNull(raw.dueDate)
     const dueDate = isIsoDate(dueDateRaw) ? dueDateRaw : null
+    const requestedBy = normalizeStringOrNull(raw.requestedBy)
     const reason = normalizeStringOrNull(raw.reason) ?? ''
 
     return {
@@ -134,6 +148,7 @@ export async function analyzeInboxText({
       projectId,
       size,
       dueDate,
+      requestedBy,
       reason,
       modelName: MODEL_NAME,
       analyzedAt: new Date().toISOString(),
