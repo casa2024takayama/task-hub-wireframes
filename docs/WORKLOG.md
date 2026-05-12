@@ -302,5 +302,13 @@
 - `package.json` **0.6.1**、`CHANGELOG.md` / `RECENT_CHANGES` 更新。
 
 ### 申し送り
-- **本番 Firebase プロジェクト側でルールを必ず公開すること**（リポジトリに置いただけでは反映されない）。CLI 例: `firebase deploy --only firestore:rules`（`.firebaserc` または `--project` でプロジェクト指定）。
+- **本番 Firebase プロジェクト側でルールを必ず公開すること**（リポジトリに置いただけでは反映されない）。CLI: ルートで `npm run deploy:firestore`（`.firebaserc` の default = `task-hub-a65c1`）。
 - 匿名ユーザーの **過去に Firestore に上がっていたデータ** は、ルール公開後は匿名クライアントからは読めなくなる（意図どおり）。Google 連携済み UID のドキュメントのみアクセス可。
+
+---
+
+## 2026-05-12 / Cursor（Claude）— `.firebaserc` と deploy スクリプト
+
+### やったこと
+- **`.firebaserc`**: default プロジェクトを `task-hub-a65c1` に設定。
+- **`package.json`**: `npm run deploy:firestore` → `npx firebase-tools@latest deploy --only firestore:rules`。

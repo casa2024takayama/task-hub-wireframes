@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:firestore": "npx firebase-tools@latest deploy --only firestore:rules"
   },
   "dependencies": {
     "firebase": "^12.13.0",
