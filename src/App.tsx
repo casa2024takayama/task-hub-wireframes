@@ -40,11 +40,12 @@ function useNow() {
 }
 
 const SYNC_INDICATOR: Record<SyncStatus, { dot: string; label: string }> = {
-  init:    { dot: 'bg-slate-300 animate-pulse', label: '接続中…' },
-  synced:  { dot: 'bg-emerald-400',             label: '同期済み' },
-  saving:  { dot: 'bg-amber-400 animate-pulse', label: '保存中…' },
-  offline: { dot: 'bg-rose-400',                label: 'オフライン' },
-  error:   { dot: 'bg-rose-500',                label: 'エラー' },
+  init:       { dot: 'bg-slate-300 animate-pulse', label: '接続中…' },
+  local_only: { dot: 'bg-slate-400',               label: 'ローカルのみ' },
+  synced:     { dot: 'bg-emerald-400',             label: '同期済み' },
+  saving:     { dot: 'bg-amber-400 animate-pulse', label: '保存中…' },
+  offline:    { dot: 'bg-rose-400',                label: 'オフライン' },
+  error:      { dot: 'bg-rose-500',                label: 'エラー' },
 }
 
 function SyncBadge({ status }: { status: SyncStatus }) {

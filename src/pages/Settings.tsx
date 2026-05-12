@@ -14,6 +14,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.6.1',
+    date: '2026-05-12',
+    lines: [
+      'Firestore セキュリティルール用 firestore.rules（Google ログイン + 自分の UID のみ）',
+      '匿名のときはクラウド同期を試みずヘッダーは「ローカルのみ」表示',
+    ],
+  },
+  {
     version: '0.6.0',
     date: '2026-05-12',
     lines: [
@@ -206,8 +214,9 @@ export default function Settings() {
           <p className="font-semibold text-amber-800 mb-1">匿名ログインについて</p>
           <p>
             匿名のままでは<strong>ブラウザごとに Firebase のユーザー ID が別</strong>になります。
-            そのため「同期済み」と出ていても<strong>他の端末とは別のデータ</strong>を見ています。
-            PC とスマホで同じデータにするには、下の <strong>Google 連携</strong> が必要です。
+            また<strong>Firestore のクラウド同期は Google ログイン後のみ</strong>（セキュリティルールのため）で、
+            匿名時はヘッダーが「ローカルのみ」になります。PC とスマホで同じクラウドデータにするには、下の{' '}
+            <strong>Google 連携</strong> が必要です。
           </p>
         </div>
 

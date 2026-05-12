@@ -9,6 +9,16 @@
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-05-12
+
+### 追加
+- **`firestore.rules`**（リポジトリ管理）: `users/{uid}/data/main` は **Google ログイン**かつ **自分の UID** のみ read/write。それ以外のパスは拒否
+- **`firebase.json`**: CLI で `firebase deploy --only firestore:rules` するときのルールファイル指定
+
+### 変更
+- **Firestore 同期**: 匿名ユーザーのときはリモートに接続せず、ヘッダー表示を **「ローカルのみ」** に変更（ルールと整合）
+- 設定画面の匿名説明文を上記に合わせて更新
+
 ## [0.6.0] — 2026-05-12
 
 ### 追加

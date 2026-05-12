@@ -12,7 +12,13 @@ import { useAppStore } from '../store'
 import type { Project, Task, InboxItem } from '../types'
 import { ensureAppDataShape } from './ensureDataShape'
 
-export type SyncStatus = 'init' | 'synced' | 'saving' | 'offline' | 'error'
+export type SyncStatus =
+  | 'init'
+  | 'local_only'
+  | 'synced'
+  | 'saving'
+  | 'offline'
+  | 'error'
 
 interface RemoteData {
   projects: Project[]
@@ -126,6 +132,14 @@ export function useFirestoreSync() {
         if (cancelled) return
         if (!user) {
           ensureAnonymousSession()
+          teardownSync()
+          setStatus('init')
+          return
+        }
+        // Firestore ルールは Google ログインのみ許可（匿名はローカルのみ）
+        if (user.isAnonymous) {
+          teardownSync()
+          setStatus('local_only')
           return
         }
         void startSyncForUid(user.uid).catch((err) => {

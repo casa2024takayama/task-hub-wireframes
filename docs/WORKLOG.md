@@ -288,3 +288,19 @@
 **残タスク例**
 - プロジェクト手動並び（`sortOrder`）は未実装
 - ルーチン機能本体は未実装（表示のみグレーアウト）
+
+---
+
+## 2026-05-12 / Cursor（Claude）— Firestore セキュリティルールと同期整合（v0.6.1）
+
+### やったこと
+- **`firestore.rules`**: `users/{uid}/data/main` を **Google プロバイダ（`google.com`）** かつ **`request.auth.uid == userId`** のときのみ read/write。他パスは明示的に拒否。
+- **`firebase.json`**: CLI から `firebase deploy --only firestore:rules` できるようルールファイルを指定。
+- **`useFirestoreSync`**: 匿名ユーザーでは Firestore に接続しない（ルール拒否によるエラー回避）。同期ステータスに **`local_only`** を追加。
+- **`App.tsx`**: ヘッダーに「ローカルのみ」表示。
+- **`Settings.tsx`**: 匿名時はクラウド同期しない旨を説明に追記。
+- `package.json` **0.6.1**、`CHANGELOG.md` / `RECENT_CHANGES` 更新。
+
+### 申し送り
+- **本番 Firebase プロジェクト側でルールを必ず公開すること**（リポジトリに置いただけでは反映されない）。CLI 例: `firebase deploy --only firestore:rules`（`.firebaserc` または `--project` でプロジェクト指定）。
+- 匿名ユーザーの **過去に Firestore に上がっていたデータ** は、ルール公開後は匿名クライアントからは読めなくなる（意図どおり）。Google 連携済み UID のドキュメントのみアクセス可。
