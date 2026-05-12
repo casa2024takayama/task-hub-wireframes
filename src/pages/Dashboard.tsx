@@ -1,7 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppStore } from '../store'
 import type { Project } from '../types'
+import { LinkifiedText } from '../lib/linkifyText'
+import { taskSizeBadgeClass, taskSizeShortLabel } from '../lib/taskSize'
 
 const COLOR_MAP: Record<string, string> = {
   indigo: 'border-indigo-400 bg-indigo-50',
@@ -63,14 +65,21 @@ function ProjectCard({ project }: { project: Project }) {
       to={`/projects/${project.id}`}
       className={`block bg-white rounded-xl border-l-4 p-4 shadow-sm hover:shadow-md transition ${colorCls}`}
     >
-      <div className="flex items-start justify-between mb-1">
+      <div className="flex items-start justify-between mb-1 gap-2">
         <h3 className="text-sm font-bold text-slate-800">{project.name}</h3>
-        <span className={`text-[10px] px-2 py-0.5 rounded ${BADGE_MAP[project.type]}`}>
+        <span className={`text-[10px] px-2 py-0.5 rounded shrink-0 ${BADGE_MAP[project.type]}`}>
           {TYPE_LABEL[project.type]}
         </span>
       </div>
+      {project.dueDate && (
+        <p className="text-[10px] text-slate-600 mb-1">
+          期限 <span className="font-medium">{project.dueDate}</span>
+        </p>
+      )}
       {project.resumeNote && (
-        <p className="text-xs text-slate-500 leading-relaxed mb-2 line-clamp-2">{project.resumeNote}</p>
+        <p className="text-xs text-slate-500 leading-relaxed mb-2 line-clamp-2">
+          <LinkifiedText text={project.resumeNote} />
+        </p>
       )}
       <div className="space-y-1">
         {activeTasks.slice(0, 2).map((t) => (
@@ -89,7 +98,9 @@ function ProjectCard({ project }: { project: Project }) {
               className="w-3.5 h-3.5 accent-indigo-600 shrink-0"
             />
             <span className="text-xs text-slate-700 truncate">{t.title}</span>
-            {t.size === 'small' && <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 rounded shrink-0">小</span>}
+            <span className={`text-[9px] px-1.5 rounded shrink-0 ${taskSizeBadgeClass(t.size)}`}>
+              {taskSizeShortLabel(t.size)}
+            </span>
             <RequesterBadge requestedBy={t.requestedBy} />
           </div>
         ))}
@@ -114,6 +125,7 @@ export default function Dashboard() {
   } = useAppStore()
   const [pasteText, setPasteText] = useState('')
   const [newProjectName, setNewProjectName] = useState('')
+  const [newProjectDue, setNewProjectDue] = useState('')
   const [showNewProject, setShowNewProject] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -141,10 +153,23 @@ export default function Dashboard() {
     e.preventDefault()
     const name = newProjectName.trim()
     if (!name) return
-    addProject(name, 'one-time')
+    addProject(name, 'one-time', newProjectDue.trim() || null)
     setNewProjectName('')
+    setNewProjectDue('')
     setShowNewProject(false)
   }
+
+  const sortedActiveProjects = useMemo(() => {
+    const active = projects.filter((p) => p.status === 'active')
+    return [...active].sort((a, b) => {
+      const ad = a.dueDate
+      const bd = b.dueDate
+      if (!ad && !bd) return 0
+      if (!ad) return 1
+      if (!bd) return -1
+      return ad.localeCompare(bd)
+    })
+  }, [projects])
 
   return (
     <div className="space-y-6">
@@ -201,9 +226,9 @@ export default function Dashboard() {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-slate-800 truncate">{t.title}</div>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                      {t.size === 'small' && (
-                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 rounded">小</span>
-                      )}
+                      <span className={`text-[10px] px-1.5 rounded ${taskSizeBadgeClass(t.size)}`}>
+                        {taskSizeShortLabel(t.size)}
+                      </span>
                       {t.dueDate && <span className="text-xs text-slate-500">{t.dueDate}</span>}
                       {badge && (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded ${badge.cls}`}>{badge.label}</span>
@@ -291,21 +316,37 @@ export default function Dashboard() {
         </div>
 
         {showNewProject && (
-          <form onSubmit={handleNewProject} className="bg-white rounded-xl border border-indigo-200 p-3 mb-3 flex gap-2">
+          <form
+            onSubmit={handleNewProject}
+            className="bg-white rounded-xl border border-indigo-200 p-3 mb-3 flex flex-wrap gap-2 items-end"
+          >
             <input
               autoFocus
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
               placeholder="プロジェクト名"
-              className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400"
+              className="flex-1 min-w-[140px] border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400"
             />
-            <button type="submit" className="bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-lg hover:bg-indigo-700">追加</button>
-            <button type="button" onClick={() => setShowNewProject(false)} className="text-sm text-slate-400 px-2">×</button>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-slate-500">締切（任意）</label>
+              <input
+                type="date"
+                value={newProjectDue}
+                onChange={(e) => setNewProjectDue(e.target.value)}
+                className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-indigo-400"
+              />
+            </div>
+            <button type="submit" className="bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-lg hover:bg-indigo-700">
+              追加
+            </button>
+            <button type="button" onClick={() => setShowNewProject(false)} className="text-sm text-slate-400 px-2">
+              ×
+            </button>
           </form>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {projects.filter((p) => p.status === 'active').map((p) => (
+          {sortedActiveProjects.map((p) => (
             <ProjectCard key={p.id} project={p} />
           ))}
         </div>

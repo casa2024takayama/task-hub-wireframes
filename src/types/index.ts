@@ -1,4 +1,4 @@
-export type TaskSize = 'small' | 'large'
+export type TaskSize = 'small' | 'medium' | 'large' | 'xlarge'
 export type ProjectType = 'one-time' | 'routine-weekly' | 'routine-monthly'
 export type ProjectStatus = 'active' | 'completed' | 'paused'
 
@@ -13,6 +13,8 @@ export interface Task {
   completedAt?: string | null
   /** 依頼者（自由入力）。「△△さん」「経営会議」「自分」など何でも可。自分発タスク（＝アイデア）は '自分' を入れる。 */
   requestedBy?: string | null
+  /** 受信箱から昇格したときのコピペ原文（参照・メモ用） */
+  originalPaste?: string | null
 }
 
 export interface InboxItem {
@@ -58,6 +60,10 @@ export interface Project {
   name: string
   type: ProjectType
   status: ProjectStatus
+  /** プロジェクト締切（YYYY-MM-DD または null） */
+  dueDate: string | null
+  /** プロジェクトを完了にした日時（ISO）。復帰で active に戻すと null */
+  completedAt?: string | null
   resumeNote: string
   color: string
   tasks: Task[]

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Project, Task, InboxItem, InboxSuggestion } from '../types'
+import { ensureAppDataShape } from '../lib/ensureDataShape'
 
 function uid() {
   return crypto.randomUUID()
@@ -20,14 +21,14 @@ interface AppState {
     opts: {
       title: string
       projectId: string | null
-      size: 'small' | 'large'
+      size: Task['size']
       dueDate: string | null
       requestedBy?: string | null
     }
   ) => void
 
   // Projects
-  addProject: (name: string, type: Project['type']) => void
+  addProject: (name: string, type: Project['type'], dueDate?: string | null) => void
   updateProject: (id: string, patch: Partial<Omit<Project, 'id' | 'tasks' | 'items' | 'createdAt'>>) => void
   deleteProject: (id: string) => void
 
@@ -37,7 +38,8 @@ interface AppState {
     title: string,
     size: Task['size'],
     dueDate: string | null,
-    requestedBy?: string | null
+    requestedBy?: string | null,
+    originalPaste?: string | null
   ) => void
   // projectId === null は未割当タスクへの操作を意味する（D-003）
   toggleTask: (projectId: string | null, taskId: string) => void
@@ -78,11 +80,31 @@ const DEMO_PROJECTS: Project[] = [
     name: '外部イベント登壇',
     type: 'one-time',
     status: 'active',
+    dueDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0],
+    completedAt: null,
     color: 'indigo',
     resumeNote: '登壇資料のP12まで完成。次は事例スライドを追加する。',
     tasks: [
-      { id: 't1', title: '登壇者プロフィールの確認返信', size: 'small', dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], projectId: 'p1', done: false, createdAt: new Date().toISOString() },
-      { id: 't2', title: 'スライド最終確認', size: 'large', dueDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0], projectId: 'p1', done: false, createdAt: new Date().toISOString() },
+      {
+        id: 't1',
+        title: '登壇者プロフィールの確認返信',
+        size: 'small',
+        dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        projectId: 'p1',
+        done: false,
+        createdAt: new Date().toISOString(),
+        originalPaste: null,
+      },
+      {
+        id: 't2',
+        title: 'スライド最終確認',
+        size: 'large',
+        dueDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+        projectId: 'p1',
+        done: false,
+        createdAt: new Date().toISOString(),
+        originalPaste: null,
+      },
     ],
     items: [{ id: 'i1', title: 'HDMIアダプタ', done: false }],
     createdAt: new Date().toISOString(),
@@ -92,10 +114,21 @@ const DEMO_PROJECTS: Project[] = [
     name: '社内 Web リニューアル',
     type: 'one-time',
     status: 'active',
+    dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+    completedAt: null,
     color: 'emerald',
     resumeNote: 'デザインレビュー待ち。返信来たらHTML化フェーズへ。',
     tasks: [
-      { id: 't3', title: 'デザインFBをSlackに返信', size: 'small', dueDate: new Date().toISOString().split('T')[0], projectId: 'p2', done: false, createdAt: new Date().toISOString() },
+      {
+        id: 't3',
+        title: 'デザインFBをSlackに返信',
+        size: 'small',
+        dueDate: new Date().toISOString().split('T')[0],
+        projectId: 'p2',
+        done: false,
+        createdAt: new Date().toISOString(),
+        originalPaste: null,
+      },
     ],
     items: [],
     createdAt: new Date().toISOString(),
@@ -105,10 +138,21 @@ const DEMO_PROJECTS: Project[] = [
     name: 'X 週次投稿',
     type: 'routine-weekly',
     status: 'active',
+    dueDate: null,
+    completedAt: null,
     color: 'amber',
     resumeNote: '先週の反響が高かったテーマ：AI ツール活用。今週も継続。',
     tasks: [
-      { id: 't4', title: '今週の投稿ネタ3本をメモ', size: 'small', dueDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0], projectId: 'p3', done: false, createdAt: new Date().toISOString() },
+      {
+        id: 't4',
+        title: '今週の投稿ネタ3本をメモ',
+        size: 'small',
+        dueDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
+        projectId: 'p3',
+        done: false,
+        createdAt: new Date().toISOString(),
+        originalPaste: null,
+      },
     ],
     items: [],
     createdAt: new Date().toISOString(),
@@ -172,6 +216,7 @@ export const useAppStore = create<AppState>()(
           done: false,
           createdAt: new Date().toISOString(),
           requestedBy: requestedBy || null,
+          originalPaste: item.rawText,
         }
         if (projectId === null) {
           set({
@@ -188,20 +233,43 @@ export const useAppStore = create<AppState>()(
         })
       },
 
-      addProject: (name, type) =>
+      addProject: (name, type, dueDate = null) =>
         set((s) => ({
           projects: [
             ...s.projects,
-            { id: uid(), name, type, status: 'active', color: 'indigo', resumeNote: '', tasks: [], items: [], createdAt: new Date().toISOString() },
+            {
+              id: uid(),
+              name,
+              type,
+              status: 'active',
+              dueDate: dueDate ?? null,
+              completedAt: null,
+              color: 'indigo',
+              resumeNote: '',
+              tasks: [],
+              items: [],
+              createdAt: new Date().toISOString(),
+            },
           ],
         })),
 
       updateProject: (id, patch) =>
-        set((s) => ({ projects: s.projects.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
+        set((s) => ({
+          projects: s.projects.map((p) => {
+            if (p.id !== id) return p
+            const next = { ...p, ...patch } as Project
+            if (patch.status === 'completed' && p.status !== 'completed') {
+              next.completedAt = new Date().toISOString()
+            } else if (patch.status === 'active' && p.status === 'completed') {
+              next.completedAt = null
+            }
+            return next
+          }),
+        })),
 
       deleteProject: (id) => set((s) => ({ projects: s.projects.filter((p) => p.id !== id) })),
 
-      addTask: (projectId, title, size, dueDate, requestedBy) =>
+      addTask: (projectId, title, size, dueDate, requestedBy, originalPaste = null) =>
         set((s) => ({
           projects: s.projects.map((p) =>
             p.id === projectId
@@ -218,6 +286,7 @@ export const useAppStore = create<AppState>()(
                       done: false,
                       createdAt: new Date().toISOString(),
                       requestedBy: requestedBy || null,
+                      originalPaste: originalPaste ?? null,
                     },
                   ],
                 }
@@ -305,11 +374,7 @@ export const useAppStore = create<AppState>()(
         if (!isExportPayload(payload)) {
           return { ok: false, error: '形式が正しくありません（projects / inbox / unassignedTasks の配列が必要）' }
         }
-        set({
-          projects: payload.projects,
-          inbox: payload.inbox,
-          unassignedTasks: payload.unassignedTasks,
-        })
+        set(ensureAppDataShape(payload))
         return { ok: true }
       },
 
@@ -319,23 +384,57 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'task-hub-storage',
-      // v1 → v2: Task に requestedBy フィールドを追加（既存タスクは null 補完）
-      version: 2,
+      // v2: Task.requestedBy / v3: TaskSize 4 段階・Task.originalPaste・Project.dueDate・Project.completedAt
+      version: 3,
       migrate: (persisted, fromVersion) => {
         if (!persisted) return persisted as AppState
-        const state = persisted as Partial<AppState>
+        let state = persisted as Partial<AppState>
+
         if (fromVersion < 2) {
-          const fillTask = (t: Task): Task =>
-            'requestedBy' in t ? t : { ...t, requestedBy: null }
-          return {
+          const fillTaskV2 = (t: Task): Task =>
+            'requestedBy' in t && t.requestedBy !== undefined ? t : { ...t, requestedBy: null }
+          state = {
             ...state,
             projects: (state.projects ?? []).map((p) => ({
               ...p,
-              tasks: (p.tasks ?? []).map(fillTask),
+              tasks: (p.tasks ?? []).map(fillTaskV2),
             })),
-            unassignedTasks: (state.unassignedTasks ?? []).map(fillTask),
-          } as AppState
+            unassignedTasks: (state.unassignedTasks ?? []).map(fillTaskV2),
+          }
         }
+
+        if (fromVersion < 3) {
+          const normalizeSize = (s: unknown): Task['size'] => {
+            if (s === 'medium' || s === 'large' || s === 'xlarge' || s === 'small') return s
+            return 'small'
+          }
+
+          const fillTaskV3 = (t: Task): Task => ({
+            ...t,
+            size: normalizeSize((t as { size?: unknown }).size),
+            originalPaste:
+              'originalPaste' in t && t.originalPaste !== undefined && t.originalPaste !== null
+                ? t.originalPaste
+                : null,
+          })
+
+          const fillProjectV3 = (p: Project): Project => {
+            const legacy = p as Project & { dueDate?: unknown; completedAt?: unknown }
+            return {
+              ...p,
+              dueDate: typeof legacy.dueDate === 'string' ? legacy.dueDate : null,
+              completedAt: typeof legacy.completedAt === 'string' ? legacy.completedAt : null,
+              tasks: (p.tasks ?? []).map(fillTaskV3),
+            }
+          }
+
+          state = {
+            ...state,
+            projects: (state.projects ?? []).map(fillProjectV3),
+            unassignedTasks: (state.unassignedTasks ?? []).map(fillTaskV3),
+          }
+        }
+
         return state as AppState
       },
     }

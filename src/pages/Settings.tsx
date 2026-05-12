@@ -14,6 +14,15 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.6.0',
+    date: '2026-05-12',
+    lines: [
+      'プロジェクト締切・完了記録（再開で完了日のみ取り消し）',
+      'タスクサイズ 4 段階（通知対象は小のみ）・受信箱昇格で originalPaste 保存',
+      '再開メモの URL 自動リンク、レポートに期限表示・ルーチン行グレーアウト',
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-05-11',
     lines: [

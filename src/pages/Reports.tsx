@@ -1,4 +1,5 @@
 import { useAppStore } from '../store'
+import { taskSizeBadgeClass, taskSizeShortLabel } from '../lib/taskSize'
 
 function weekStart() {
   const d = new Date()
@@ -53,7 +54,9 @@ export default function Reports() {
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">アクティブプロジェクト</p>
           <p className="text-3xl font-bold text-indigo-700">{activeProjects}</p>
-          <p className="text-xs text-slate-400">うちルーチン {routineProjects}本</p>
+          <p className="text-xs text-slate-400/70 line-through decoration-slate-300" title="ルーチン機能は未実装（将来復活予定）">
+            うちルーチン {routineProjects}本（未実装）
+          </p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">未完了タスク</p>
@@ -109,9 +112,9 @@ export default function Reports() {
                       {t.projectName} ・ {dateStr}
                     </p>
                   </div>
-                  {t.size === 'small' && (
-                    <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 rounded shrink-0">小</span>
-                  )}
+                  <span className={`text-[10px] px-1.5 rounded shrink-0 ${taskSizeBadgeClass(t.size)}`}>
+                    {taskSizeShortLabel(t.size)}
+                  </span>
                 </div>
               )
             })}
@@ -121,7 +124,10 @@ export default function Reports() {
 
       {/* プロジェクト別タスク消化 */}
       <section>
-        <h2 className="text-sm font-bold text-slate-700 mb-3">プロジェクト別タスク消化</h2>
+        <h2 className="text-sm font-bold text-slate-700 mb-3 flex flex-wrap items-baseline gap-2">
+          プロジェクト別タスク消化
+          <span className="text-xs font-normal text-slate-400">各カードにプロジェクト期限を表示</span>
+        </h2>
         <div className="space-y-2">
           {projects.filter((p) => p.status === 'active').map((p) => {
             const total = p.tasks.length
@@ -129,9 +135,20 @@ export default function Reports() {
             const pct = total === 0 ? 0 : Math.round((done / total) * 100)
             return (
               <div key={p.id} className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-medium text-slate-800">{p.name}</span>
-                  <span className="text-xs text-slate-500">{done}/{total}</span>
+                <div className="flex items-center justify-between mb-1.5 gap-2 flex-wrap">
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-slate-800">{p.name}</span>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {p.dueDate ? (
+                        <>
+                          期限 <span className="font-medium text-slate-700">{p.dueDate}</span>
+                        </>
+                      ) : (
+                        <span className="text-slate-400">期限未設定</span>
+                      )}
+                    </p>
+                  </div>
+                  <span className="text-xs text-slate-500 shrink-0">{done}/{total}</span>
                 </div>
                 <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div

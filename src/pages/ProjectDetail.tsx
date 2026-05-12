@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAppStore } from '../store'
+import { LinkifiedText } from '../lib/linkifyText'
+import { TASK_SIZE_OPTIONS, taskSizeBadgeClass, taskSizeShortLabel } from '../lib/taskSize'
+import type { TaskSize } from '../types'
+
+function taskAfterProjectDeadline(taskDue: string | null, projectDue: string | null): boolean {
+  if (!taskDue || !projectDue) return false
+  return taskDue > projectDue
+}
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
@@ -10,7 +18,7 @@ export default function ProjectDetail() {
   const [editNote, setEditNote] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [newTask, setNewTask] = useState('')
-  const [newTaskSize, setNewTaskSize] = useState<'small' | 'large'>('small')
+  const [newTaskSize, setNewTaskSize] = useState<TaskSize>('small')
   const [newTaskDue, setNewTaskDue] = useState('')
   const [newTaskRequestedBy, setNewTaskRequestedBy] = useState('')
   const [newItem, setNewItem] = useState('')
@@ -70,13 +78,57 @@ export default function ProjectDetail() {
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
-      <div className="flex items-center gap-3">
-        <Link to="/" className="text-slate-400 hover:text-slate-600 text-sm">←</Link>
-        <h1 className="text-xl font-bold text-slate-800">{project.name}</h1>
-        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">
-          {project.status === 'active' ? '進行中' : '完了'}
-        </span>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link to="/" className="text-slate-400 hover:text-slate-600 text-sm shrink-0">
+            ←
+          </Link>
+          <h1 className="text-xl font-bold text-slate-800">{project.name}</h1>
+          <span
+            className={`text-xs px-2 py-0.5 rounded ${
+              project.status === 'active'
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-slate-200 text-slate-600'
+            }`}
+          >
+            {project.status === 'active' ? '進行中' : project.status === 'completed' ? '完了' : '一時停止'}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <label className="flex items-center gap-1.5 text-slate-600">
+            <span className="text-xs whitespace-nowrap">締切</span>
+            <input
+              type="date"
+              value={project.dueDate ?? ''}
+              onChange={(e) => updateProject(project.id, { dueDate: e.target.value || null })}
+              className="border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-indigo-400"
+            />
+          </label>
+          {project.status === 'active' && (
+            <button
+              type="button"
+              onClick={() => updateProject(project.id, { status: 'completed' })}
+              className="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700"
+            >
+              完了にする
+            </button>
+          )}
+          {project.status === 'completed' && (
+            <button
+              type="button"
+              onClick={() => updateProject(project.id, { status: 'active' })}
+              className="text-xs border border-indigo-300 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50"
+            >
+              再開（完了日のみ取り消し）
+            </button>
+          )}
+        </div>
       </div>
+      {project.status === 'completed' && project.completedAt && (
+        <p className="text-xs text-slate-500">
+          完了記録: {new Date(project.completedAt).toLocaleString('ja-JP')}
+        </p>
+      )}
 
       {/* 再開メモ */}
       <section className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
@@ -106,7 +158,11 @@ export default function ProjectDetail() {
           />
         ) : (
           <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-            {project.resumeNote || <span className="text-slate-400 italic">メモなし — 「編集」で追加</span>}
+            {project.resumeNote ? (
+              <LinkifiedText text={project.resumeNote} />
+            ) : (
+              <span className="text-slate-400 italic">メモなし — 「編集」で追加</span>
+            )}
           </p>
         )}
       </section>
@@ -125,11 +181,14 @@ export default function ProjectDetail() {
             />
             <select
               value={newTaskSize}
-              onChange={(e) => setNewTaskSize(e.target.value as 'small' | 'large')}
-              className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none"
+              onChange={(e) => setNewTaskSize(e.target.value as TaskSize)}
+              className="border border-slate-200 rounded-lg px-2 py-1.5 text-sm bg-white focus:outline-none max-w-[11rem]"
             >
-              <option value="small">小（30分）</option>
-              <option value="large">大</option>
+              {TASK_SIZE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
             </select>
             <input
               type="date"
@@ -163,33 +222,60 @@ export default function ProjectDetail() {
         </form>
 
         <div className="space-y-2">
-          {activeTasks.map((t) => (
-            <div key={t.id} className="flex items-center gap-3 bg-white rounded-lg border border-slate-200 px-3 py-2.5">
-              <input
-                type="checkbox"
-                checked={t.done}
-                onChange={() => toggleTask(project.id, t.id)}
-                className="w-4 h-4 accent-indigo-600 shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-slate-800">{t.title}</div>
-                {t.requestedBy && (
-                  <div className="text-[11px] text-slate-500 mt-0.5">
-                    {t.requestedBy === '自分' ? '💡 アイデア' : `from ${t.requestedBy}`}
+          {activeTasks.map((t) => {
+            const overdueProject = taskAfterProjectDeadline(t.dueDate, project.dueDate)
+            return (
+              <div key={t.id} className="bg-white rounded-lg border border-slate-200 px-3 py-2.5 space-y-1">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={t.done}
+                    onChange={() => toggleTask(project.id, t.id)}
+                    className="w-4 h-4 accent-indigo-600 shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-slate-800">{t.title}</div>
+                    {t.requestedBy && (
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {t.requestedBy === '自分' ? '💡 アイデア' : `from ${t.requestedBy}`}
+                      </div>
+                    )}
                   </div>
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${taskSizeBadgeClass(t.size)}`}>
+                        {taskSizeShortLabel(t.size)}
+                      </span>
+                      {t.dueDate && (
+                        <span className={`text-xs ${dueCls(t.dueDate)}`}>{t.dueDate}</span>
+                      )}
+                      <button
+                        onClick={() => deleteTask(project.id, t.id)}
+                        className="text-slate-300 hover:text-rose-400 text-xs ml-1"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    {overdueProject && (
+                      <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                        タスク締切がプロジェクト締切より後
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {t.originalPaste && (
+                  <details className="text-[11px] text-slate-500 pl-7">
+                    <summary className="cursor-pointer select-none text-indigo-600 hover:underline">
+                      コピペ元を表示
+                    </summary>
+                    <pre className="mt-1 whitespace-pre-wrap break-words bg-slate-50 rounded p-2 text-slate-600 max-h-40 overflow-y-auto">
+                      {t.originalPaste}
+                    </pre>
+                  </details>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className={`text-[10px] px-1.5 py-0.5 rounded ${t.size === 'small' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
-                  {t.size === 'small' ? '小' : '大'}
-                </span>
-                {t.dueDate && (
-                  <span className={`text-xs ${dueCls(t.dueDate)}`}>{t.dueDate}</span>
-                )}
-                <button onClick={() => deleteTask(project.id, t.id)} className="text-slate-300 hover:text-rose-400 text-xs ml-1">✕</button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
 
           {activeTasks.length === 0 && (
             <p className="text-xs text-slate-400 py-2">タスクなし</p>
@@ -201,8 +287,16 @@ export default function ProjectDetail() {
               <div className="space-y-1 mt-1">
                 {doneTasks.map((t) => (
                   <div key={t.id} className="flex items-center gap-3 bg-slate-50 rounded-lg border border-slate-100 px-3 py-2 opacity-60">
-                    <input type="checkbox" checked readOnly onChange={() => toggleTask(project.id, t.id)} className="w-4 h-4 accent-indigo-400 shrink-0" />
+                    <input
+                      type="checkbox"
+                      checked={t.done}
+                      onChange={() => toggleTask(project.id, t.id)}
+                      className="w-4 h-4 accent-indigo-400 shrink-0"
+                    />
                     <span className="flex-1 text-sm text-slate-500 line-through">{t.title}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${taskSizeBadgeClass(t.size)}`}>
+                      {taskSizeShortLabel(t.size)}
+                    </span>
                   </div>
                 ))}
               </div>

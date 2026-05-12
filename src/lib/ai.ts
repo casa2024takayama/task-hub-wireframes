@@ -27,8 +27,10 @@ function getModel(): GenerativeModel {
           'どれにも該当しない、または判断できない場合は文字列 "null" を返す。',
       }),
       size: Schema.enumString({
-        enum: ['small', 'large'],
-        description: '30 分以内で終わる作業なら "small"、それ以上掛かりそうなら "large"。',
+        enum: ['small', 'medium', 'large', 'xlarge'],
+        description:
+          '作業の大きさ。small=30分以内、medium=〜2時間、large=半日〜1日、xlarge=複数日。' +
+          'それ以上の案件はプロジェクト単位と判断し、可能なら最も近い値を選ぶ。',
       }),
       dueDate: Schema.string({
         description:
@@ -114,7 +116,7 @@ export async function analyzeInboxText({
     '既存プロジェクト（JSON配列）：',
     JSON.stringify(projectList, null, 2),
     '',
-    'タスクサイズの基準: small は 30 分以内、それより大きいものは large。',
+    'タスクサイズの基準: small=30分以内、medium=〜2時間、large=半日〜1日、xlarge=複数日。特大より大きいものは本来プロジェクト。',
     '',
     '依頼者の判定基準:',
     '- 人名が読み取れる場合は敬称付きで「〇〇さん」と統一（例: 「田中」と書かれていても「田中さん」）',
@@ -136,7 +138,8 @@ export async function analyzeInboxText({
     const projectIdRaw = normalizeStringOrNull(raw.projectId)
     const projectId = isProjectIdValid(projectIdRaw, projects) ? projectIdRaw : null
     const sizeRaw = normalizeStringOrNull(raw.size)
-    const size: TaskSize = sizeRaw === 'large' ? 'large' : 'small'
+    const allowed: TaskSize[] = ['small', 'medium', 'large', 'xlarge']
+    const size: TaskSize = allowed.includes(sizeRaw as TaskSize) ? (sizeRaw as TaskSize) : 'small'
     const dueDateRaw = normalizeStringOrNull(raw.dueDate)
     const dueDate = isIsoDate(dueDateRaw) ? dueDateRaw : null
     const requestedBy = normalizeStringOrNull(raw.requestedBy)

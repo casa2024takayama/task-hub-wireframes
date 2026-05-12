@@ -10,6 +10,7 @@ import {
 } from './firebase'
 import { useAppStore } from '../store'
 import type { Project, Task, InboxItem } from '../types'
+import { ensureAppDataShape } from './ensureDataShape'
 
 export type SyncStatus = 'init' | 'synced' | 'saving' | 'offline' | 'error'
 
@@ -94,11 +95,7 @@ export function useFirestoreSync() {
           if (!isValidRemoteData(data)) return
 
           isApplyingRemoteRef.current = true
-          useAppStore.setState({
-            projects: data.projects,
-            inbox: data.inbox,
-            unassignedTasks: data.unassignedTasks,
-          })
+          useAppStore.setState(ensureAppDataShape(data))
           isApplyingRemoteRef.current = false
           setStatus('synced')
         },

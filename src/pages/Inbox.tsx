@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore } from '../store'
 import { analyzeInboxText, MIN_TEXT_LENGTH_FOR_AI } from '../lib/ai'
-import type { InboxItem, Project } from '../types'
+import type { InboxItem, Project, TaskSize } from '../types'
+import { TASK_SIZE_OPTIONS } from '../lib/taskSize'
 
 interface FormState {
   title: string
   projectId: string
-  size: 'small' | 'large'
+  size: TaskSize
   dueDate: string
   requestedBy: string
   aiApplied: boolean
@@ -208,11 +209,14 @@ export default function Inbox() {
                         <label className="text-xs text-slate-500 block mb-1">サイズ</label>
                         <select
                           value={f.size}
-                          onChange={(e) => setField(item.id, 'size', e.target.value as 'small' | 'large')}
+                          onChange={(e) => setField(item.id, 'size', e.target.value as TaskSize)}
                           className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-indigo-400 bg-white"
                         >
-                          <option value="small">小（30分以内）</option>
-                          <option value="large">大</option>
+                          {TASK_SIZE_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>
+                              {o.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
