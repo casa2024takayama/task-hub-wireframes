@@ -33,7 +33,9 @@ function tomorrow() {
 }
 function dueBadge(dueDate: string | null) {
   if (!dueDate) return null
-  if (dueDate <= today()) return { label: '今日', cls: 'bg-amber-200 text-amber-800' }
+  const t = today()
+  if (dueDate < t) return { label: '期限切れ', cls: 'bg-rose-500 text-white' }
+  if (dueDate === t) return { label: '今日', cls: 'bg-amber-200 text-amber-800' }
   if (dueDate <= tomorrow()) return { label: '明日', cls: 'bg-slate-200 text-slate-700' }
   return null
 }
@@ -131,14 +133,17 @@ export default function Dashboard() {
 
   const allTasks = projects.flatMap((p) => p.tasks.map((t) => ({ ...t, projectName: p.name })))
   // 「直近の小タスク」帯は依頼の取りこぼし防止が目的なので、自分発（アイデア）は除外（通知ルールと同じ）
-  const urgentTasks = allTasks.filter(
-    (t) =>
-      !t.done &&
-      t.size === 'small' &&
-      t.dueDate &&
-      t.dueDate <= tomorrow() &&
-      t.requestedBy !== '自分'
-  )
+  // 期限切れ → 今日 → 明日 の順に並べ、同日内は元の順を維持
+  const urgentTasks = allTasks
+    .filter(
+      (t) =>
+        !t.done &&
+        t.size === 'small' &&
+        t.dueDate &&
+        t.dueDate <= tomorrow() &&
+        t.requestedBy !== '自分'
+    )
+    .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''))
   const activeUnassigned = unassignedTasks.filter((t) => !t.done)
 
   function handleCapture() {

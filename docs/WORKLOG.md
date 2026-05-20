@@ -312,3 +312,32 @@
 ### やったこと
 - **`.firebaserc`**: default プロジェクトを `task-hub-a65c1` に設定。
 - **`package.json`**: `npm run deploy:firestore` → `npx firebase-tools@latest deploy --only firestore:rules`。
+
+---
+
+## 2026-05-20 / Claude Code (Claude Sonnet 4.7) — v0.6.2 期限切れタスクの視覚区別
+
+### 背景
+ユーザー指摘：「タスクで設定した期限を過ぎた場合の処理がない」。
+コードを読むと部分的にはあるが、`dueDate <= today()` で判定していたため **期限切れと今日が同じ見た目** で区別できず、Dashboard では期限切れも「今日」バッジで表示される誤情報状態だった。
+
+### やったこと（B 案：バッジ追加 + 並べ替え）
+- **`src/pages/Dashboard.tsx`**
+  - `dueBadge()` を 3 段階に拡張：`期限切れ`（`bg-rose-500 text-white`）/ `今日`（琥珀）/ `明日`（グレー）
+  - `urgentTasks` に明示的な `dueDate` 昇順ソートを追加（期限切れ → 今日 → 明日 の順）
+- **`src/pages/ProjectDetail.tsx`**
+  - `dueCls()` を 3 段階の色に：過去 = `text-rose-700 font-bold` / 今日 = `text-rose-600 font-semibold` / 未来 = `text-slate-500`
+  - `isOverdue()` ヘルパーを追加し、未完了かつ期限切れのタスク行に `期限切れ` バッジを表示（完了済みには出さない）
+- `package.json` を **0.6.2** にバンプ、`CHANGELOG.md` と `Settings.tsx` の `RECENT_CHANGES` も更新
+
+### 設計判断
+- 「簡単なもの」とのリクエストなのでデータモデル変更はせず、表示ロジックのみ
+- 完了済みタスクには「期限切れ」バッジを出さない（過ぎていても完了していれば意味が無い）
+- C 案（サマリーチップ「期限切れ N 件」）は採用せず、必要になれば次パッチで追加
+- ピン留め帯のソートは `localeCompare` で `YYYY-MM-DD` 文字列を昇順 → 自然に過去日付が先頭に来る
+
+### 申し送り
+- **`npm run build` 通過確認済み**
+- まだ **未プッシュ**（コミットのみ）。ユーザーの明示指示でプッシュする
+- 関連して、依頼者別の集計レポート（v0.5.0 申し送りの宿題）は依然未着手
+- 「期限切れ件数のサマリー表示」やレポートでの「期限超過件数」は次以降の候補

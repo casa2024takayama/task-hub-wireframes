@@ -14,6 +14,15 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.6.2',
+    date: '2026-05-20',
+    lines: [
+      '期限切れタスクを「今日」と区別して表示（期限切れ=赤バッジ）',
+      'Dashboard の小タスク帯を 期限切れ → 今日 → 明日 の順にソート',
+      'ProjectDetail のタスク行にも期限切れバッジを追加',
+    ],
+  },
+  {
     version: '0.6.1',
     date: '2026-05-12',
     lines: [

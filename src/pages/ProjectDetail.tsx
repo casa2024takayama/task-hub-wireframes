@@ -40,8 +40,13 @@ export default function ProjectDetail() {
   }
   function dueCls(dueDate: string | null) {
     if (!dueDate) return 'text-slate-500'
-    if (dueDate <= today()) return 'text-rose-600 font-semibold'
+    const t = today()
+    if (dueDate < t) return 'text-rose-700 font-bold'
+    if (dueDate === t) return 'text-rose-600 font-semibold'
     return 'text-slate-500'
+  }
+  function isOverdue(dueDate: string | null) {
+    return !!dueDate && dueDate < today()
   }
 
   // 過去タスクから依頼者候補を集める（datalist サジェスト用）
@@ -248,6 +253,11 @@ export default function ProjectDetail() {
                       </span>
                       {t.dueDate && (
                         <span className={`text-xs ${dueCls(t.dueDate)}`}>{t.dueDate}</span>
+                      )}
+                      {isOverdue(t.dueDate) && !t.done && (
+                        <span className="text-[10px] bg-rose-500 text-white px-1.5 py-0.5 rounded font-medium">
+                          期限切れ
+                        </span>
                       )}
                       <button
                         onClick={() => deleteTask(project.id, t.id)}
