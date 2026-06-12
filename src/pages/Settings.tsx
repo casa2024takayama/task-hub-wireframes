@@ -14,6 +14,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.1',
+    date: '2026-06-12',
+    lines: [
+      '/week をペーパー調デザインに刷新（PC は幅 1180px の 4 列）',
+      '週報の完了行に所要日数（曜、N日/当日）を追加',
+    ],
+  },
+  {
     version: '0.7.0',
     date: '2026-06-12',
     lines: [

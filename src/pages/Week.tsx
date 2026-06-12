@@ -2,16 +2,36 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppStore } from '../store'
 import type { Project, Task, WeekStatus } from '../types'
-import { taskSizeBadgeClass, taskSizeShortLabel } from '../lib/taskSize'
+import { taskSizeShortLabel } from '../lib/taskSize'
 import { dueBadge, weekRange, waitDays } from '../lib/due'
 import { buildWeeklyReport } from '../lib/weeklyReport'
 
+// 旧・朝のカンバン（morning-kanban.html）由来のペーパー調テーマ。
+// このページだけアプリ標準の slate ではなく紙の質感に寄せる（ユーザー要望）。
+const INK = '#2B2620'
+const INK_SOFT = '#6B6256'
+const LINE = '#D8CDB8'
+const CARD_BG = '#FBF8F1'
+const ACCENT = '#BD4B2A'
+
 const COLS: { id: WeekStatus; name: string; bar: string }[] = [
-  { id: 'todo', name: '今週やる', bar: 'bg-slate-500' },
-  { id: 'doing', name: '着手中', bar: 'bg-emerald-600' },
-  { id: 'wait', name: '待ち', bar: 'bg-rose-500' },
-  { id: 'done', name: '完了', bar: 'bg-slate-400' },
+  { id: 'todo', name: '今週やる', bar: '#7A6A52' },
+  { id: 'doing', name: '着手中', bar: '#2F6E5B' },
+  { id: 'wait', name: '待ち', bar: '#BD4B2A' },
+  { id: 'done', name: '完了', bar: '#5A5246' },
 ]
+
+// 施策チップと同じ系統のパレット。プロジェクト ID から安定的に色を割り当てる
+const PALETTE = [
+  '#BD4B2A', '#2F6E5B', '#3A6EA5', '#8A6D3B', '#7A4A6E', '#4F7A52',
+  '#A85A2A', '#566B7A', '#2E5C66', '#B58A2C', '#8C3A4E', '#6B6E37',
+]
+function projectColor(projectId: string | null): string {
+  if (!projectId) return INK_SOFT
+  let h = 0
+  for (let i = 0; i < projectId.length; i++) h = (h * 31 + projectId.charCodeAt(i)) >>> 0
+  return PALETTE[h % PALETTE.length]
+}
 
 interface BoardTask extends Task {
   projectName: string
@@ -36,9 +56,17 @@ function WaitRow({ task }: { task: BoardTask }) {
         onChange={(e) => setValue(e.target.value)}
         onBlur={() => updateTaskWait(task.projectId, task.id, value.trim())}
         placeholder="待ち先（例：○○さん返信待ち）"
-        className="w-full text-[11px] text-slate-600 bg-amber-50 border border-dashed border-amber-300 rounded px-1.5 py-1 focus:outline-none focus:border-amber-500"
+        className="w-full text-[11.5px] rounded-md px-2 py-1 focus:outline-none"
+        style={{
+          color: INK_SOFT,
+          background: '#FFF8EE',
+          border: '1px dashed #E9C9B5',
+        }}
       />
-      <span className={`text-[10px] ${days >= 3 ? 'text-rose-600 font-bold' : 'text-slate-400'}`}>
+      <span
+        className="text-[10px] font-medium"
+        style={{ color: days >= 3 ? ACCENT : INK_SOFT }}
+      >
         {days >= 3 && '⚠ '}
         {days}日待ち
       </span>
@@ -51,6 +79,7 @@ function BoardCard({ task }: { task: BoardTask }) {
   const colIdx = COLS.findIndex((c) => c.id === task.effectiveStatus)
   const badge = dueBadge(task.dueDate)
   const isDone = task.effectiveStatus === 'done'
+  const color = projectColor(task.projectId)
 
   function move(toIdx: number) {
     const col = COLS[toIdx]
@@ -59,48 +88,57 @@ function BoardCard({ task }: { task: BoardTask }) {
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-2 shadow-sm">
-      <div className={`text-xs leading-snug ${isDone ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+    <div
+      className="rounded-[10px] p-[10px] pb-2"
+      style={{
+        background: CARD_BG,
+        border: `1px solid ${LINE}`,
+        borderLeft: `4px solid ${color}`,
+        boxShadow: '0 1px 2px rgba(43,38,32,.08),0 4px 14px rgba(43,38,32,.06)',
+      }}
+    >
+      <div
+        className="text-[13.5px] leading-normal break-words"
+        style={{ color: isDone ? INK_SOFT : INK, textDecoration: isDone ? 'line-through' : 'none' }}
+      >
         {task.title}
       </div>
-      <div className="flex items-center gap-1 mt-1 flex-wrap">
-        {task.projectId ? (
-          <Link
-            to={`/projects/${task.projectId}`}
-            className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded hover:bg-slate-200 truncate max-w-full"
-          >
-            {task.projectName}
-          </Link>
-        ) : (
-          <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded">未割当</span>
-        )}
-        <span className={`text-[9px] px-1 rounded ${taskSizeBadgeClass(task.size)}`}>
-          {taskSizeShortLabel(task.size)}
-        </span>
-        {task.roundLabel && (
-          <span className="text-[9px] bg-indigo-50 text-indigo-600 px-1 rounded">{task.roundLabel}</span>
-        )}
-        {!isDone && badge && (
-          <span className={`text-[9px] px-1 py-0.5 rounded ${badge.cls}`}>{badge.label}</span>
-        )}
-        {!isDone && !badge && task.dueDate && (
-          <span className="text-[9px] text-slate-400">{fmtMD(task.dueDate)}</span>
-        )}
-      </div>
       {task.effectiveStatus === 'wait' && <WaitRow task={task} />}
-      <div className="flex items-center justify-between mt-1.5">
-        <button
-          onClick={() => setTaskWeekStatus(task.projectId, task.id, null)}
-          className="text-[10px] text-slate-300 hover:text-slate-500"
-          title="ボードから外す"
-        >
-          外す
-        </button>
-        <div className="flex gap-1">
+      <div className="flex items-center justify-between mt-2 gap-1.5">
+        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+          {task.projectId ? (
+            <Link
+              to={`/projects/${task.projectId}`}
+              className="text-[10.5px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap"
+              style={{ background: color + '22', color }}
+            >
+              {task.projectName}
+            </Link>
+          ) : (
+            <span className="text-[10.5px] px-2 py-0.5 rounded-full" style={{ background: '#ddd', color: '#555' }}>
+              未割当
+            </span>
+          )}
+          <span className="text-[10px] tabular-nums" style={{ color: INK_SOFT }}>
+            {taskSizeShortLabel(task.size)}
+            {task.roundLabel && ` ・${task.roundLabel}`}
+            {task.createdAt && ` ・${fmtMD(task.createdAt.split('T')[0])}`}
+          </span>
+          {!isDone && badge && (
+            <span className={`text-[9px] px-1.5 py-0.5 rounded ${badge.cls}`}>{badge.label}</span>
+          )}
+          {!isDone && !badge && task.dueDate && (
+            <span className="text-[10px]" style={{ color: ACCENT }}>
+              〆{fmtMD(task.dueDate)}
+            </span>
+          )}
+        </div>
+        <div className="flex gap-[3px] shrink-0 items-center">
           <button
             onClick={() => move(colIdx - 1)}
             disabled={colIdx === 0}
-            className="w-6 h-6 text-[10px] border border-slate-200 rounded bg-white text-slate-500 hover:text-slate-800 disabled:opacity-25"
+            className="w-[23px] h-[23px] text-xs rounded-md disabled:opacity-25 flex items-center justify-center"
+            style={{ border: `1px solid ${LINE}`, background: '#fff', color: INK_SOFT }}
             aria-label="前の列へ"
           >
             ◀
@@ -108,10 +146,20 @@ function BoardCard({ task }: { task: BoardTask }) {
           <button
             onClick={() => move(colIdx + 1)}
             disabled={colIdx === COLS.length - 1}
-            className="w-6 h-6 text-[10px] border border-slate-200 rounded bg-white text-slate-500 hover:text-slate-800 disabled:opacity-25"
+            className="w-[23px] h-[23px] text-xs rounded-md disabled:opacity-25 flex items-center justify-center"
+            style={{ border: `1px solid ${LINE}`, background: '#fff', color: INK_SOFT }}
             aria-label="次の列へ"
           >
             ▶
+          </button>
+          <button
+            onClick={() => setTaskWeekStatus(task.projectId, task.id, null)}
+            className="w-[23px] h-[23px] text-xs rounded-md flex items-center justify-center hover:opacity-70"
+            style={{ border: `1px solid ${LINE}`, background: '#fff', color: INK_SOFT }}
+            title="ボードから外す（バックログへ戻す）"
+            aria-label="ボードから外す"
+          >
+            ×
           </button>
         </div>
       </div>
@@ -177,45 +225,76 @@ export default function Week() {
     }
   }
 
+  const serif = { fontFamily: "'Zen Old Mincho', serif" }
+  const sans = { fontFamily: "'Zen Kaku Gothic New', -apple-system, 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif" }
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-lg font-bold text-slate-800">今週のボード</h1>
-          <p className="text-xs text-slate-500">
-            {fmtMD(start)} – {fmtMD(end)} ／ 締切が今週のタスクは自動で「今週やる」に乗ります
-          </p>
+    <div style={{ ...sans, color: INK }} className="space-y-5">
+      {/* ヘッダー */}
+      <div>
+        <div className="flex items-end justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-[28px] font-bold leading-tight tracking-wide" style={serif}>
+              今週のボード<span style={{ color: ACCENT }}>.</span>
+            </h1>
+            <p className="text-[12.5px] mt-1 tracking-wider" style={{ color: INK_SOFT }}>
+              WEEK BOARD ／ 完了は週報の「動いたこと」・待ちは「詰まり」に変換されます
+            </p>
+          </div>
+          <div className="text-right" style={{ ...serif, color: INK_SOFT }}>
+            <span className="text-sm block">— 今週 —</span>
+            <b className="text-[20px] tracking-wide" style={{ color: INK }}>
+              {fmtMD(start)} – {fmtMD(end)}
+            </b>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowReport(true)}
-            className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-indigo-700"
-          >
-            週報を書き出す
-          </button>
-          <button
-            onClick={handleCloseWeek}
-            className="border border-slate-300 text-slate-600 text-xs px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50"
-          >
-            週の締め
-          </button>
-        </div>
+        <div
+          className="h-[2px] rounded mt-3"
+          style={{ background: `linear-gradient(90deg, ${ACCENT} 0 56px, ${LINE} 56px 100%)` }}
+        />
+      </div>
+
+      {/* アクション */}
+      <div className="flex gap-2.5 flex-wrap items-center">
+        <button
+          onClick={() => setShowReport(true)}
+          className="text-[13px] font-bold px-4 py-2.5 rounded-[9px]"
+          style={{ background: INK, color: '#F2ECDF', border: `1px solid ${INK}` }}
+        >
+          週報を書き出す
+        </button>
+        <button
+          onClick={handleCloseWeek}
+          className="text-[13px] px-4 py-2.5 rounded-[9px] hover:brightness-[.98]"
+          style={{ background: CARD_BG, color: INK, border: `1px solid ${LINE}` }}
+        >
+          完了をクリア（週の締め）
+        </button>
+        <span className="text-[11px]" style={{ color: INK_SOFT }}>
+          締切が今週のタスクは自動で「今週やる」に乗ります
+        </span>
       </div>
 
       {/* ボード */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 min-[760px]:grid-cols-4 gap-3.5">
         {COLS.map((col) => {
           const cards = board.filter((t) => t.effectiveStatus === col.id)
           return (
-            <div key={col.id} className="bg-white/50 border border-slate-200 rounded-xl p-2 min-h-[120px]">
-              <div className="flex items-center justify-between px-1 mb-2">
-                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <span className={`w-4 h-1 rounded ${col.bar}`} />
+            <div
+              key={col.id}
+              className="rounded-[14px] p-3 pb-4 min-h-[160px]"
+              style={{ background: 'rgba(255,255,255,.35)', border: `1px solid ${LINE}` }}
+            >
+              <div className="flex items-center justify-between mx-1 mb-3">
+                <span className="font-bold text-[13.5px] tracking-wide flex items-center gap-[7px]">
+                  <span className="w-[18px] h-[3px] rounded-sm" style={{ background: col.bar }} />
                   {col.name}
                 </span>
-                <span className="text-[10px] text-slate-400 tabular-nums">{cards.length}</span>
+                <span className="text-[11px] tabular-nums" style={{ color: INK_SOFT }}>
+                  {cards.length}
+                </span>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-[9px]">
                 {cards.map((t) => (
                   <BoardCard key={t.id} task={t} />
                 ))}
@@ -226,34 +305,48 @@ export default function Week() {
       </div>
 
       {/* バックログから引き上げ（主動線） */}
-      <details className="bg-white rounded-xl border border-slate-200 p-3">
-        <summary className="text-sm text-indigo-600 cursor-pointer select-none font-medium">
+      <details
+        className="rounded-[14px] p-4"
+        style={{ background: CARD_BG, border: `1px solid ${LINE}` }}
+      >
+        <summary className="text-sm cursor-pointer select-none font-bold" style={{ color: ACCENT }}>
           ＋ バックログから引き上げる（{backlog.length}件）
         </summary>
         <div className="mt-3 space-y-3">
           {backlog.length === 0 && (
-            <p className="text-xs text-slate-400">引き上げられるタスクはありません。</p>
+            <p className="text-xs" style={{ color: INK_SOFT }}>
+              引き上げられるタスクはありません。
+            </p>
           )}
           {projects
             .filter((p) => p.status === 'active')
             .map((p) => {
               const tasks = backlog.filter((t) => t.projectId === p.id)
               if (tasks.length === 0) return null
+              const color = projectColor(p.id)
               return (
                 <div key={p.id}>
-                  <div className="text-[11px] font-bold text-slate-500 mb-1">{p.name}</div>
+                  <div className="text-[11px] font-bold mb-1 flex items-center gap-1.5" style={{ color: INK_SOFT }}>
+                    <span className="w-[9px] h-[9px] rounded-full inline-block" style={{ background: color }} />
+                    {p.name}
+                  </div>
                   <div className="space-y-1">
                     {tasks.map((t) => (
-                      <div key={t.id} className="flex items-center gap-2 text-xs text-slate-700">
+                      <div key={t.id} className="flex items-center gap-2 text-[13px]">
                         <button
                           onClick={() => setTaskWeekStatus(t.projectId, t.id, 'todo')}
-                          className="shrink-0 w-6 h-6 border border-indigo-200 text-indigo-600 rounded hover:bg-indigo-50"
+                          className="shrink-0 w-6 h-6 rounded-md text-sm leading-none"
+                          style={{ border: `1px solid ${LINE}`, background: '#fff', color: ACCENT }}
                           aria-label="今週やるへ"
                         >
                           ＋
                         </button>
                         <span className="truncate">{t.title}</span>
-                        {t.dueDate && <span className="text-[10px] text-slate-400 shrink-0">{fmtMD(t.dueDate)}</span>}
+                        {t.dueDate && (
+                          <span className="text-[10.5px] shrink-0 tabular-nums" style={{ color: INK_SOFT }}>
+                            {fmtMD(t.dueDate)}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -265,19 +358,26 @@ export default function Week() {
             if (tasks.length === 0) return null
             return (
               <div>
-                <div className="text-[11px] font-bold text-slate-500 mb-1">未割当</div>
+                <div className="text-[11px] font-bold mb-1" style={{ color: INK_SOFT }}>
+                  未割当
+                </div>
                 <div className="space-y-1">
                   {tasks.map((t) => (
-                    <div key={t.id} className="flex items-center gap-2 text-xs text-slate-700">
+                    <div key={t.id} className="flex items-center gap-2 text-[13px]">
                       <button
                         onClick={() => setTaskWeekStatus(null, t.id, 'todo')}
-                        className="shrink-0 w-6 h-6 border border-indigo-200 text-indigo-600 rounded hover:bg-indigo-50"
+                        className="shrink-0 w-6 h-6 rounded-md text-sm leading-none"
+                        style={{ border: `1px solid ${LINE}`, background: '#fff', color: ACCENT }}
                         aria-label="今週やるへ"
                       >
                         ＋
                       </button>
                       <span className="truncate">{t.title}</span>
-                      {t.dueDate && <span className="text-[10px] text-slate-400 shrink-0">{fmtMD(t.dueDate)}</span>}
+                      {t.dueDate && (
+                        <span className="text-[10.5px] shrink-0 tabular-nums" style={{ color: INK_SOFT }}>
+                          {fmtMD(t.dueDate)}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -290,31 +390,40 @@ export default function Week() {
       {/* 週報モーダル */}
       {showReport && (
         <div
-          className="fixed inset-0 bg-slate-900/45 flex items-center justify-center p-4 z-[60]"
+          className="fixed inset-0 flex items-center justify-center p-5 z-[60]"
+          style={{ background: 'rgba(43,38,32,.45)' }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowReport(false)
           }}
         >
-          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[85vh] overflow-auto p-5 shadow-2xl">
-            <h2 className="text-base font-bold text-slate-800 mb-1">今週の週報ドラフト</h2>
-            <p className="text-xs text-slate-500 mb-3">
-              完了＝今週動いたこと（受信箱で即応した分も入ります）／待ち＝詰まり。コピーして整えてください。
+          <div
+            className="rounded-2xl max-w-[620px] w-full max-h-[86vh] overflow-auto p-[22px]"
+            style={{ ...sans, background: '#F2ECDF', border: `1px solid ${LINE}`, boxShadow: '0 20px 60px rgba(0,0,0,.3)' }}
+          >
+            <h2 className="text-[19px] font-bold mb-1" style={serif}>
+              今週の週報ドラフト
+            </h2>
+            <p className="text-xs mb-3.5" style={{ color: INK_SOFT }}>
+              完了＝今週動いたこと（受信箱で即応した分も入ります）／待ち＝詰まり・要相談。コピーして整えてください。
             </p>
             <textarea
               readOnly
               value={reportText}
-              className="w-full min-h-[300px] bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs leading-relaxed font-mono text-slate-700 resize-vertical focus:outline-none"
+              className="w-full min-h-[300px] rounded-[10px] p-3.5 text-[13px] leading-relaxed font-mono resize-y focus:outline-none"
+              style={{ background: CARD_BG, border: `1px solid ${LINE}`, color: INK }}
             />
-            <div className="flex justify-end gap-2 mt-3">
+            <div className="flex justify-end gap-2.5 mt-3.5">
               <button
                 onClick={() => setShowReport(false)}
-                className="text-xs px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50"
+                className="text-[13px] px-3.5 py-2 rounded-[9px]"
+                style={{ background: CARD_BG, color: INK, border: `1px solid ${LINE}` }}
               >
                 閉じる
               </button>
               <button
                 onClick={copyReport}
-                className="text-xs px-4 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                className="text-[13px] font-bold px-4 py-2 rounded-[9px]"
+                style={{ background: INK, color: '#F2ECDF', border: `1px solid ${INK}` }}
               >
                 {copied ? 'コピーしました' : 'コピー'}
               </button>

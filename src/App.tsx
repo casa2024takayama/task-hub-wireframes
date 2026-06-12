@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, NavLink } from 'react-router-dom'
+import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import { useAppStore } from './store'
 import { useFirestoreSync, type SyncStatus } from './lib/useFirestoreSync'
 import Dashboard from './pages/Dashboard'
@@ -63,9 +63,20 @@ export default function App() {
   const inbox = useAppStore((s) => s.inbox)
   const now = useNow()
   const { status } = useFirestoreSync()
+  const { pathname } = useLocation()
+  // /week は旧・朝のカンバン由来の幅広・ペーパー調レイアウト（PC で 4 列を快適に）
+  const isWeek = pathname === '/week'
+  const mainWidth = isWeek ? 'max-w-[1180px]' : 'max-w-3xl'
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div
+      className={`min-h-screen ${isWeek ? '' : 'bg-slate-100'}`}
+      style={
+        isWeek
+          ? { background: 'radial-gradient(120% 90% at 50% -10%, #F7F2E7 0%, #F2ECDF 55%, #EAE2D0 100%)' }
+          : undefined
+      }
+    >
       {/* Top nav */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 h-12 flex items-center justify-between gap-3">
@@ -115,7 +126,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6">
+      <main className={`${mainWidth} mx-auto px-4 py-6`}>
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/week" element={<Week />} />
