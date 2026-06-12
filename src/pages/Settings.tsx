@@ -15,6 +15,11 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.3',
+    date: '2026-06-12',
+    lines: ['/week などでリロードすると 404 になる問題を修正（GitHub Pages の SPA フォールバック）'],
+  },
+  {
     version: '0.7.2',
     date: '2026-06-12',
     lines: [
