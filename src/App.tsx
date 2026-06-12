@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
+import { Routes, Route, NavLink } from 'react-router-dom'
 import { useAppStore } from './store'
 import { useFirestoreSync, type SyncStatus } from './lib/useFirestoreSync'
 import Dashboard from './pages/Dashboard'
@@ -63,26 +63,20 @@ export default function App() {
   const inbox = useAppStore((s) => s.inbox)
   const now = useNow()
   const { status } = useFirestoreSync()
-  const { pathname } = useLocation()
-  // /week は旧・朝のカンバン由来の幅広・ペーパー調レイアウト（PC で 4 列を快適に）
-  const isWeek = pathname === '/week'
-  const mainWidth = isWeek ? 'max-w-[1180px]' : 'max-w-3xl'
-
+  // 全ページ幅広（1180px）＋ペーパー調背景で統一（2026-06 リデザイン）
   return (
     <div
-      className={`min-h-screen ${isWeek ? '' : 'bg-slate-100'}`}
-      style={
-        isWeek
-          ? { background: 'radial-gradient(120% 90% at 50% -10%, #F7F2E7 0%, #F2ECDF 55%, #EAE2D0 100%)' }
-          : undefined
-      }
+      className="min-h-screen"
+      style={{
+        background: 'radial-gradient(120% 90% at 50% -10%, #F7F2E7 0%, #F2ECDF 55%, #EAE2D0 100%)',
+      }}
     >
       {/* Top nav */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 h-12 flex items-center justify-between gap-3">
+        <div className="max-w-[1180px] mx-auto px-4 h-12 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <NavLink to="/" className="text-base font-bold text-slate-800 shrink-0 flex items-baseline gap-1">
-              タスクハブ
+            <NavLink to="/" className="text-base font-bold font-serif tracking-wide text-slate-800 shrink-0 flex items-baseline gap-1">
+              タスクハブ<span className="text-indigo-600">.</span>
               <span className="text-[10px] font-mono font-normal text-slate-400">v{APP_VERSION}</span>
             </NavLink>
             <span className="text-xs text-slate-500 font-mono tabular-nums truncate">
@@ -126,7 +120,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className={`${mainWidth} mx-auto px-4 py-6`}>
+      <main className="max-w-[1180px] mx-auto px-4 py-6">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/week" element={<Week />} />

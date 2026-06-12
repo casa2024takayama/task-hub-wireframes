@@ -15,6 +15,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.4',
+    date: '2026-06-12',
+    lines: [
+      'アプリ全体をペーパー調テーマ・幅広（1180px）に統一',
+      'ダッシュボードのプロジェクト一覧を PC で 3 カラム表示',
+    ],
+  },
+  {
     version: '0.7.3',
     date: '2026-06-12',
     lines: ['/week などでリロードすると 404 になる問題を修正（GitHub Pages の SPA フォールバック）'],
