@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppStore } from '../store'
+import { parseKanbanReport } from '../lib/importKanbanReport'
 import {
   auth,
   getAuthSummary,
@@ -13,6 +14,22 @@ const APP_VERSION =
   typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
+  {
+    version: '0.7.2',
+    date: '2026-06-12',
+    lines: [
+      '旧カンバンの週報マークダウンを貼り付けて取り込む機能（設定 → データ管理）',
+      '完了日・所要日数・締切・待ち先まで復元してマージ',
+    ],
+  },
+  {
+    version: '0.7.1',
+    date: '2026-06-12',
+    lines: [
+      '/week をペーパー調デザインに刷新（PC は幅 1180px の 4 列）',
+      '週報の完了行に所要日数（曜、N日/当日）を追加',
+    ],
+  },
   {
     version: '0.7.0',
     date: '2026-06-12',
@@ -111,9 +128,11 @@ function formatTimestamp() {
 export default function Settings() {
   const exportData = useAppStore((s) => s.exportData)
   const importData = useAppStore((s) => s.importData)
+  const importKanbanTasks = useAppStore((s) => s.importKanbanTasks)
   const clearAll = useAppStore((s) => s.clearAll)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [kanbanText, setKanbanText] = useState('')
   const [message, setMessage] = useState<{ type: 'info' | 'error' | 'success'; text: string } | null>(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [authSummary, setAuthSummary] = useState(() => getAuthSummary(auth.currentUser))
@@ -156,6 +175,32 @@ export default function Settings() {
     } catch (err) {
       setMessage({ type: 'error', text: `JSON の読み込みに失敗：${err instanceof Error ? err.message : '不明なエラー'}` })
     }
+  }
+
+  function handleKanbanImport() {
+    const items = parseKanbanReport(kanbanText)
+    if (items.length === 0) {
+      setMessage({ type: 'error', text: '取り込めるタスクが見つかりません（- [施策名] タイトル 形式の行が必要です）' })
+      return
+    }
+    const sections = {
+      done: items.filter((i) => i.weekStatus === 'done').length,
+      doing: items.filter((i) => i.weekStatus === 'doing').length,
+      wait: items.filter((i) => i.weekStatus === 'wait').length,
+      todo: items.filter((i) => i.weekStatus === 'todo').length,
+    }
+    if (
+      !confirm(
+        `${items.length} 件のタスクを取り込みます。\n完了 ${sections.done} / 進行中 ${sections.doing} / 待ち ${sections.wait} / 来週 ${sections.todo}\nよろしいですか？`
+      )
+    )
+      return
+    const result = importKanbanTasks(items)
+    setKanbanText('')
+    setMessage({
+      type: 'success',
+      text: `${result.importedTasks} 件のタスクを取り込みました（新規プロジェクト ${result.createdProjects} 件）。「今週」ボードを確認してください。`,
+    })
   }
 
   function handleClear() {
@@ -333,6 +378,31 @@ export default function Settings() {
             ファイル選択
           </button>
           <input ref={fileInputRef} type="file" accept="application/json,.json" onChange={handleImportFile} hidden />
+        </div>
+
+        <div className="border-t border-slate-100 pt-4">
+          <p className="text-sm font-medium text-slate-800">旧カンバンの週報から取り込み</p>
+          <p className="text-xs text-slate-500 mt-0.5 mb-2">
+            朝のカンバン（HTML 版）の「週報を書き出す」の全文を貼り付けてください。
+            施策はプロジェクト（名前一致・なければ常設として新規作成）、各セクションは週ボードの列にマージされます。
+            <strong>既存データは消えません</strong>が、同じ週報を2回取り込むと重複します。
+          </p>
+          <textarea
+            value={kanbanText}
+            onChange={(e) => setKanbanText(e.target.value)}
+            rows={6}
+            placeholder={'# 週報 6/12週\n\n## 今週動いたこと（…）\n- [施策名] タイトル（木、当日）\n…'}
+            className="w-full border border-slate-200 rounded-lg p-3 text-xs font-mono focus:outline-none focus:border-indigo-400"
+          />
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={handleKanbanImport}
+              disabled={!kanbanText.trim()}
+              className="bg-indigo-600 disabled:opacity-40 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition"
+            >
+              解析して取り込む
+            </button>
+          </div>
         </div>
 
         <div className="flex items-start justify-between gap-4 border-t border-slate-100 pt-4">

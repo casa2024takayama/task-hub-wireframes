@@ -65,8 +65,18 @@ export function buildWeeklyReport(projects: Project[], unassignedTasks: Task[]):
   let dist = `月${counts[1]}／火${counts[2]}／水${counts[3]}／木${counts[4]}／金${counts[5]}`
   if (counts[6] > 0) dist += `／土${counts[6]}`
   if (counts[0] > 0) dist += `／日${counts[0]}`
+  // 着手から完了までの所要（旧カンバン v3 の durOf 相当）
+  const durOf = (t: NamedTask) => {
+    if (!t.createdAt || !t.completedAt) return ''
+    const c = t.createdAt.split('T')[0]
+    const d = t.completedAt.split('T')[0]
+    const days = Math.round(
+      (new Date(d + 'T00:00:00Z').getTime() - new Date(c + 'T00:00:00Z').getTime()) / 86400000
+    )
+    return days <= 0 ? '、当日' : `、${days}日`
+  }
   const dayOf = (t: NamedTask) =>
-    t.completedAt ? `（${DAY_JP[new Date(t.completedAt).getDay()]}）` : ''
+    t.completedAt ? `（${DAY_JP[new Date(t.completedAt).getDay()]}${durOf(t)}）` : ''
 
   const today = new Date()
   let s = `# 週報　${today.getMonth() + 1}/${today.getDate()}週\n\n`
