@@ -4,6 +4,7 @@ import { useAppStore } from '../store'
 import type { Project } from '../types'
 import { LinkifiedText } from '../lib/linkifyText'
 import { taskSizeBadgeClass, taskSizeShortLabel } from '../lib/taskSize'
+import { dueBadge, tomorrowStr } from '../lib/due'
 
 const COLOR_MAP: Record<string, string> = {
   indigo: 'border-indigo-400 bg-indigo-50',
@@ -17,27 +18,16 @@ const BADGE_MAP: Record<string, string> = {
   'one-time': 'bg-slate-100 text-slate-600',
   'routine-weekly': 'bg-indigo-100 text-indigo-700',
   'routine-monthly': 'bg-purple-100 text-purple-700',
+  'routine-quarterly': 'bg-purple-100 text-purple-700',
+  ongoing: 'bg-emerald-100 text-emerald-700',
 }
 
 const TYPE_LABEL: Record<string, string> = {
   'one-time': '単発',
   'routine-weekly': '週次ルーチン',
   'routine-monthly': '月次ルーチン',
-}
-
-function today() {
-  return new Date().toISOString().split('T')[0]
-}
-function tomorrow() {
-  return new Date(Date.now() + 86400000).toISOString().split('T')[0]
-}
-function dueBadge(dueDate: string | null) {
-  if (!dueDate) return null
-  const t = today()
-  if (dueDate < t) return { label: '期限切れ', cls: 'bg-rose-500 text-white' }
-  if (dueDate === t) return { label: '今日', cls: 'bg-amber-200 text-amber-800' }
-  if (dueDate <= tomorrow()) return { label: '明日', cls: 'bg-slate-200 text-slate-700' }
-  return null
+  'routine-quarterly': '四半期ルーチン',
+  ongoing: '常設',
 }
 
 /** 依頼者バッジ。"自分"=アイデアは黄色、他人の依頼は薄い藍 */
@@ -140,7 +130,7 @@ export default function Dashboard() {
         !t.done &&
         t.size === 'small' &&
         t.dueDate &&
-        t.dueDate <= tomorrow() &&
+        t.dueDate <= tomorrowStr() &&
         t.requestedBy !== '自分'
     )
     .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''))

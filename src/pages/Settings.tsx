@@ -14,6 +14,16 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.0',
+    date: '2026-06-12',
+    lines: [
+      '「今週のボード」（/week）を追加。締切が今週のタスクは自動着地、日付なしはバックログから引き上げ',
+      '待ち列に待ち先メモと「N日待ち」表示（3日以上で警告）',
+      '週報ドラフトをワンタップ生成（旧カンバン形式踏襲、即応した依頼も計上）',
+      'プロジェクト種別に常設・四半期ルーチンを追加',
+    ],
+  },
+  {
     version: '0.6.2',
     date: '2026-05-20',
     lines: [

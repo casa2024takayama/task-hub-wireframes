@@ -343,6 +343,37 @@
 
 ---
 
+## 2026-06-12 / Claude Code (Claude Fable 5) — v0.7.0 今週のボード（3階吸収）
+
+### やったこと
+- **コミット①（型＋ストア基盤）**
+  - `src/types/index.ts`: `WeekStatus` 型、Task に `weekStatus`/`waitFor`/`waitSince`/`roundLabel`、ProjectType に `ongoing`/`routine-quarterly`
+  - `src/store/index.ts`: persist v3→v4 migration、`setTaskWeekStatus`（wait 出入りで待ち情報・done 出入りで完了同期）、`updateTaskWait`、`closeWeek`、`toggleTask` の weekStatus 同期
+  - `src/lib/ensureDataShape.ts`: 新フィールドの補完追加（Firestore 旧ドキュメント対策）
+- **コミット②（画面＋週報＋v0.7.0）**
+  - `src/pages/Week.tsx` 新規: 4列ボード・◀▶移動・自動着地・バックログ引き上げ・待ち先入力・N日待ち（3日で⚠）・週報モーダル・週の締め
+  - `src/lib/due.ts` 新規: `dueBadge`/`weekRange`/`waitDays` を共通化（Dashboard の重複ヘルパーを移動）
+  - `src/lib/weeklyReport.ts` 新規: 旧カンバン buildReport 形式踏襲の週報生成
+  - `src/App.tsx`: `/week` ルートとナビ「今週」追加
+  - Dashboard: due ヘルパーを lib に移行、TYPE_LABEL/BADGE_MAP に常設・四半期を追加
+
+### 検証（dev サーバーでブラウザ実走）
+- 締切今週のタスク3件が「今週やる」に自動着地、来週締切はバックログに分離 ✓
+- 列移動・待ち先入力（blur 保存）・waitSince 自動記録・「0日待ち」表示 ✓
+- wait→done で done/completedAt 付与・待ち情報クリア ✓
+- 週報: 曜日分布・（曜）サフィックス・詰まりの（待ち先・N日待ち）・来週やること ✓
+- **バグ修正**: 自動着地タスク（weekStatus=null）が週報の「来週やること」に出なかった → ボードと同じ判定（締切今週で未完了）を todo に含めて解消
+- 週の締め: weekStatus のみ null、done/completedAt は保持 ✓ / リロード後も persist v4 で状態維持 ✓
+
+### 申し送り
+- **未プッシュ**。プッシュはユーザー指示待ち（先行の v0.6.2・docs コミットも未プッシュ）
+- ローカル開発時は `.env.local` 必須（ないと Firebase 初期化で白画面。今回ダミー値で検証）。
+  起動時の白画面はこれを疑うこと。将来 graceful degradation を入れても良い
+- Dashboard の「直近の小タスク帯」と /week「今週やる」列は役割が重なる。運用観察して v0.8 で統合判断（設計レビュー時の論点④）
+- 次: v0.7.5 回テンプレ（ユーザーから工程ヒアリング後）、v0.8 レポート強化、v0.9 /roadmap
+
+---
+
 ## 2026-05-20 / Claude Code (Claude Sonnet 4.7) — v0.6.2 期限切れタスクの視覚区別
 
 ### 背景

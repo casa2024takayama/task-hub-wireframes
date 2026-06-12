@@ -7,6 +7,7 @@ import Inbox from './pages/Inbox'
 import ProjectDetail from './pages/ProjectDetail'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import Week from './pages/Week'
 
 const APP_VERSION =
   typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
@@ -80,6 +81,12 @@ export default function App() {
           </div>
           <nav className="flex gap-3 text-sm shrink-0">
             <NavLink
+              to="/week"
+              className={({ isActive }) => (isActive ? 'text-indigo-700 font-semibold' : 'text-slate-500 hover:text-slate-800')}
+            >
+              今週
+            </NavLink>
+            <NavLink
               to="/inbox"
               className={({ isActive }) => (isActive ? 'text-indigo-700 font-semibold' : 'text-slate-500 hover:text-slate-800')}
             >
@@ -111,6 +118,7 @@ export default function App() {
       <main className="max-w-3xl mx-auto px-4 py-6">
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/week" element={<Week />} />
           <Route path="/inbox" element={<Inbox />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/reports" element={<Reports />} />
