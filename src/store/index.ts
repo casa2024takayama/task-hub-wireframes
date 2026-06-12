@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Project, Task, InboxItem, InboxSuggestion, WeekStatus } from '../types'
 import { ensureAppDataShape } from '../lib/ensureDataShape'
+import type { KanbanImportItem } from '../lib/importKanbanReport'
 
 function uid() {
   return crypto.randomUUID()
@@ -64,6 +65,8 @@ interface AppState {
   // Data management（設定画面から呼ばれる）
   exportData: () => ExportPayload
   importData: (payload: unknown) => { ok: true } | { ok: false; error: string }
+  /** 旧カンバン週報からの取り込み（既存データにマージ。プロジェクトは名前一致、なければ常設で作成） */
+  importKanbanTasks: (items: KanbanImportItem[]) => { createdProjects: number; importedTasks: number }
   clearAll: () => void
 }
 
@@ -440,6 +443,58 @@ export const useAppStore = create<AppState>()(
           inbox,
           unassignedTasks,
         }
+      },
+
+      importKanbanTasks: (items) => {
+        const today = new Date().toISOString().split('T')[0]
+        const { projects } = get()
+        let nextProjects = [...projects]
+        let createdProjects = 0
+        let importedTasks = 0
+
+        for (const item of items) {
+          let project = nextProjects.find((p) => p.name.trim() === item.projectName)
+          if (!project) {
+            project = {
+              id: uid(),
+              name: item.projectName,
+              type: 'ongoing',
+              status: 'active',
+              dueDate: null,
+              completedAt: null,
+              color: 'indigo',
+              resumeNote: '',
+              tasks: [],
+              items: [],
+              createdAt: new Date().toISOString(),
+            }
+            nextProjects = [...nextProjects, project]
+            createdProjects++
+          }
+          const task: Task = {
+            id: uid(),
+            title: item.title,
+            size: 'small',
+            dueDate: item.dueDate,
+            projectId: project.id,
+            done: item.done,
+            createdAt: item.createdAt,
+            completedAt: item.completedAt,
+            requestedBy: null,
+            originalPaste: null,
+            weekStatus: item.weekStatus,
+            waitFor: item.weekStatus === 'wait' ? item.waitFor ?? '' : null,
+            waitSince: item.weekStatus === 'wait' ? today : null,
+            roundLabel: null,
+          }
+          nextProjects = nextProjects.map((p) =>
+            p.id === project!.id ? { ...p, tasks: [...p.tasks, task] } : p
+          )
+          importedTasks++
+        }
+
+        set({ projects: nextProjects })
+        return { createdProjects, importedTasks }
       },
 
       importData: (payload) => {
