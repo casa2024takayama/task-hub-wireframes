@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Project, Task, InboxItem, InboxSuggestion } from '../types'
+import type { Project, Task, InboxItem, InboxSuggestion, WeekStatus } from '../types'
 import { ensureAppDataShape } from '../lib/ensureDataShape'
 
 function uid() {
@@ -45,6 +45,16 @@ interface AppState {
   toggleTask: (projectId: string | null, taskId: string) => void
   deleteTask: (projectId: string | null, taskId: string) => void
   assignTaskToProject: (taskId: string, projectId: string) => void
+
+  // 週ボード（3階）
+  setTaskWeekStatus: (
+    projectId: string | null,
+    taskId: string,
+    weekStatus: WeekStatus | null,
+    waitFor?: string
+  ) => void
+  updateTaskWait: (projectId: string | null, taskId: string, waitFor: string) => void
+  closeWeek: () => void
 
   // Items
   addItem: (projectId: string, title: string) => void
@@ -297,7 +307,15 @@ export const useAppStore = create<AppState>()(
       toggleTask: (projectId, taskId) => {
         const stamp = (t: Task): Task => {
           const nextDone = !t.done
-          return { ...t, done: nextDone, completedAt: nextDone ? new Date().toISOString() : null }
+          // ボードに出ているタスクは done と weekStatus を同期させる
+          const weekStatus =
+            t.weekStatus == null ? t.weekStatus : nextDone ? 'done' : 'todo'
+          return {
+            ...t,
+            done: nextDone,
+            completedAt: nextDone ? new Date().toISOString() : null,
+            weekStatus,
+          }
         }
         set((s) =>
           projectId === null
@@ -337,6 +355,60 @@ export const useAppStore = create<AppState>()(
             ),
           }
         }),
+
+      setTaskWeekStatus: (projectId, taskId, weekStatus, waitFor) => {
+        const today = new Date().toISOString().split('T')[0]
+        const move = (t: Task): Task => {
+          const next: Task = { ...t, weekStatus }
+          // wait の出入りで待ち情報を管理（waitSince は入った日を自動記録）
+          if (weekStatus === 'wait') {
+            next.waitFor = waitFor ?? t.waitFor ?? ''
+            next.waitSince = t.weekStatus === 'wait' ? t.waitSince : today
+          } else {
+            next.waitFor = null
+            next.waitSince = null
+          }
+          // done の出入りで完了状態を同期（旧カンバンと同じ挙動）
+          if (weekStatus === 'done' && !t.done) {
+            next.done = true
+            next.completedAt = new Date().toISOString()
+          } else if (weekStatus !== 'done' && weekStatus !== null && t.done) {
+            next.done = false
+            next.completedAt = null
+          }
+          return next
+        }
+        set((s) =>
+          projectId === null
+            ? { unassignedTasks: s.unassignedTasks.map((t) => (t.id === taskId ? move(t) : t)) }
+            : {
+                projects: s.projects.map((p) =>
+                  p.id === projectId
+                    ? { ...p, tasks: p.tasks.map((t) => (t.id === taskId ? move(t) : t)) }
+                    : p
+                ),
+              }
+        )
+      },
+
+      updateTaskWait: (projectId, taskId, waitFor) => {
+        const patch = (t: Task): Task => (t.id === taskId ? { ...t, waitFor } : t)
+        set((s) =>
+          projectId === null
+            ? { unassignedTasks: s.unassignedTasks.map(patch) }
+            : { projects: s.projects.map((p) => ({ ...p, tasks: p.tasks.map(patch) })) }
+        )
+      },
+
+      // 週の締め：完了列をボードから下ろすだけ。完了履歴（done/completedAt）は残す
+      closeWeek: () => {
+        const clear = (t: Task): Task =>
+          t.weekStatus === 'done' ? { ...t, weekStatus: null } : t
+        set((s) => ({
+          projects: s.projects.map((p) => ({ ...p, tasks: p.tasks.map(clear) })),
+          unassignedTasks: s.unassignedTasks.map(clear),
+        }))
+      },
 
       addItem: (projectId, title) =>
         set((s) => ({
@@ -385,7 +457,8 @@ export const useAppStore = create<AppState>()(
     {
       name: 'task-hub-storage',
       // v2: Task.requestedBy / v3: TaskSize 4 段階・Task.originalPaste・Project.dueDate・Project.completedAt
-      version: 3,
+      // v4: 週ボード（Task.weekStatus / waitFor / waitSince / roundLabel）
+      version: 4,
       migrate: (persisted, fromVersion) => {
         if (!persisted) return persisted as AppState
         let state = persisted as Partial<AppState>
@@ -432,6 +505,24 @@ export const useAppStore = create<AppState>()(
             ...state,
             projects: (state.projects ?? []).map(fillProjectV3),
             unassignedTasks: (state.unassignedTasks ?? []).map(fillTaskV3),
+          }
+        }
+
+        if (fromVersion < 4) {
+          const fillTaskV4 = (t: Task): Task => ({
+            ...t,
+            weekStatus: t.weekStatus ?? null,
+            waitFor: t.waitFor ?? null,
+            waitSince: t.waitSince ?? null,
+            roundLabel: t.roundLabel ?? null,
+          })
+          state = {
+            ...state,
+            projects: (state.projects ?? []).map((p) => ({
+              ...p,
+              tasks: (p.tasks ?? []).map(fillTaskV4),
+            })),
+            unassignedTasks: (state.unassignedTasks ?? []).map(fillTaskV4),
           }
         }
 

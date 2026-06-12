@@ -1,6 +1,14 @@
 export type TaskSize = 'small' | 'medium' | 'large' | 'xlarge'
-export type ProjectType = 'one-time' | 'routine-weekly' | 'routine-monthly'
+export type ProjectType =
+  | 'one-time'
+  | 'routine-weekly'
+  | 'routine-monthly'
+  | 'routine-quarterly'
+  | 'ongoing' // 常設（他部門支援・InfoSquare など終わりのない機能領域）
 export type ProjectStatus = 'active' | 'completed' | 'paused'
+
+/** 週ボード上の状態。null はボード外（バックログ） */
+export type WeekStatus = 'todo' | 'doing' | 'wait' | 'done'
 
 export interface Task {
   id: string
@@ -15,6 +23,14 @@ export interface Task {
   requestedBy?: string | null
   /** 受信箱から昇格したときのコピペ原文（参照・メモ用） */
   originalPaste?: string | null
+  /** 週ボード上の列。null = ボードに出ていない（バックログ） */
+  weekStatus?: WeekStatus | null
+  /** 待ち先（weekStatus === 'wait' のとき。例「施工会社の見積もり」） */
+  waitFor?: string | null
+  /** 待ちに入れた日 YYYY-MM-DD（自動記録。滞留日数の算出に使う） */
+  waitSince?: string | null
+  /** ルーチンの回ラベル（"#16" "5月回" など。v0.7.5 のテンプレ生成で本格利用） */
+  roundLabel?: string | null
 }
 
 export interface InboxItem {

@@ -9,6 +9,10 @@ function normalizeTask(t: Task): Task {
     size: sz,
     originalPaste: t.originalPaste ?? null,
     requestedBy: t.requestedBy ?? null,
+    weekStatus: t.weekStatus ?? null,
+    waitFor: t.waitFor ?? null,
+    waitSince: t.waitSince ?? null,
+    roundLabel: t.roundLabel ?? null,
   }
 }
 
