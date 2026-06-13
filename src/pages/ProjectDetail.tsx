@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useAppStore } from '../store'
 import { LinkifiedText } from '../lib/linkifyText'
 import { TASK_SIZE_OPTIONS, taskSizeBadgeClass, taskSizeShortLabel } from '../lib/taskSize'
+import { ROUND_TEMPLATES } from '../lib/roundTemplates'
 import type { TaskSize } from '../types'
 
 function taskAfterProjectDeadline(taskDue: string | null, projectDue: string | null): boolean {
@@ -12,7 +13,7 @@ function taskAfterProjectDeadline(taskDue: string | null, projectDue: string | n
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
-  const { projects, updateProject, addTask, toggleTask, deleteTask, addItem, toggleItem, deleteItem } = useAppStore()
+  const { projects, updateProject, addTask, toggleTask, deleteTask, addItem, toggleItem, deleteItem, createRound } = useAppStore()
   const project = projects.find((p) => p.id === id)
 
   const [editNote, setEditNote] = useState(false)
@@ -22,6 +23,11 @@ export default function ProjectDetail() {
   const [newTaskDue, setNewTaskDue] = useState('')
   const [newTaskRequestedBy, setNewTaskRequestedBy] = useState('')
   const [newItem, setNewItem] = useState('')
+  const [showRound, setShowRound] = useState(false)
+  const [roundTemplateId, setRoundTemplateId] = useState(ROUND_TEMPLATES[0].id)
+  const [roundBaseDate, setRoundBaseDate] = useState('')
+  const [roundLabel, setRoundLabel] = useState('')
+  const [roundMsg, setRoundMsg] = useState('')
 
   if (!project) {
     return (
@@ -57,6 +63,21 @@ export default function ProjectDetail() {
     }
     return Array.from(set)
   })()
+
+  function handleCreateRound(e: React.FormEvent) {
+    e.preventDefault()
+    if (!roundBaseDate) {
+      setRoundMsg('基準日を選んでください')
+      return
+    }
+    const result = createRound(project!.id, roundTemplateId, roundBaseDate, roundLabel)
+    if (result) {
+      setRoundMsg(`タスク ${result.tasks} 件${result.items ? `・アイテム ${result.items} 件` : ''} を作成しました`)
+      setRoundBaseDate('')
+      setRoundLabel('')
+      setShowRound(false)
+    }
+  }
 
   function handleAddTask(e: React.FormEvent) {
     e.preventDefault()
@@ -169,6 +190,73 @@ export default function ProjectDetail() {
               <span className="text-slate-400 italic">メモなし — 「編集」で追加</span>
             )}
           </p>
+        )}
+      </section>
+
+      {/* ルーチンの回を作成（テンプレ） */}
+      <section className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-slate-700">🔁 次回分を作成（テンプレから一括）</h2>
+          <button
+            onClick={() => { setShowRound((v) => !v); setRoundMsg('') }}
+            className="text-xs text-indigo-600 hover:underline"
+          >
+            {showRound ? '閉じる' : '開く'}
+          </button>
+        </div>
+        {roundMsg && <p className="text-xs text-emerald-700 mt-2">{roundMsg}</p>}
+        {showRound && (
+          <form onSubmit={handleCreateRound} className="mt-3 space-y-3">
+            <div>
+              <label className="text-[11px] text-slate-500 block mb-1">テンプレート</label>
+              <select
+                value={roundTemplateId}
+                onChange={(e) => setRoundTemplateId(e.target.value)}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-indigo-400"
+              >
+                {ROUND_TEMPLATES.map((t) => (
+                  <option key={t.id} value={t.id}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <div className="flex-1 min-w-[140px]">
+                <label className="text-[11px] text-slate-500 block mb-1">
+                  基準日（{ROUND_TEMPLATES.find((t) => t.id === roundTemplateId)?.baseDateLabel}）
+                </label>
+                <input
+                  type="date"
+                  value={roundBaseDate}
+                  onChange={(e) => setRoundBaseDate(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+              <div className="flex-1 min-w-[140px]">
+                <label className="text-[11px] text-slate-500 block mb-1">回ラベル（任意・例 #16 / 5月回）</label>
+                <input
+                  type="text"
+                  value={roundLabel}
+                  onChange={(e) => setRoundLabel(e.target.value)}
+                  placeholder="#16"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+            </div>
+            {/* プレビュー */}
+            <div className="bg-slate-50 rounded-lg p-2 text-[11px] text-slate-600 space-y-0.5">
+              {ROUND_TEMPLATES.find((t) => t.id === roundTemplateId)?.steps.map((s) => (
+                <div key={s.title} className="flex justify-between">
+                  <span>{s.title}</span>
+                  <span className="text-slate-400">
+                    基準日{s.offsetDays === 0 ? '当日' : s.offsetDays > 0 ? `+${s.offsetDays}日` : `${s.offsetDays}日`}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <button type="submit" className="w-full bg-indigo-600 text-white text-sm py-2 rounded-lg hover:bg-indigo-700">
+              このテンプレで回を作成
+            </button>
+          </form>
         )}
       </section>
 

@@ -15,6 +15,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.5',
+    date: '2026-06-13',
+    lines: [
+      'ルーチンの回をテンプレから一括生成（プロジェクト詳細「次回分を作成」）',
+      '基準日を選ぶと各工程の締切を自動計算。Radio / Tube / Running の内蔵テンプレ',
+    ],
+  },
+  {
     version: '0.7.4',
     date: '2026-06-12',
     lines: [

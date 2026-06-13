@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import type { Project, Task, InboxItem, InboxSuggestion, WeekStatus } from '../types'
 import { ensureAppDataShape } from '../lib/ensureDataShape'
 import type { KanbanImportItem } from '../lib/importKanbanReport'
+import { getRoundTemplate, applyOffset } from '../lib/roundTemplates'
 
 function uid() {
   return crypto.randomUUID()
@@ -56,6 +57,14 @@ interface AppState {
   ) => void
   updateTaskWait: (projectId: string | null, taskId: string, waitFor: string) => void
   closeWeek: () => void
+
+  // ルーチンの「回」をテンプレから生成
+  createRound: (
+    projectId: string,
+    templateId: string,
+    baseDate: string,
+    roundLabel: string
+  ) => { tasks: number; items: number } | null
 
   // Items
   addItem: (projectId: string, title: string) => void
@@ -411,6 +420,40 @@ export const useAppStore = create<AppState>()(
           projects: s.projects.map((p) => ({ ...p, tasks: p.tasks.map(clear) })),
           unassignedTasks: s.unassignedTasks.map(clear),
         }))
+      },
+
+      createRound: (projectId, templateId, baseDate, roundLabel) => {
+        const tpl = getRoundTemplate(templateId)
+        if (!tpl) return null
+        const label = roundLabel.trim() || null
+        const newTasks: Task[] = tpl.steps.map((step) => ({
+          id: uid(),
+          title: label ? `${step.title}（${label}）` : step.title,
+          size: step.size,
+          dueDate: applyOffset(baseDate, step.offsetDays),
+          projectId,
+          done: false,
+          createdAt: new Date().toISOString(),
+          requestedBy: null,
+          originalPaste: null,
+          weekStatus: null,
+          waitFor: null,
+          waitSince: null,
+          roundLabel: label,
+        }))
+        const newItems = tpl.items.map((title) => ({
+          id: uid(),
+          title: label ? `${title}（${label}）` : title,
+          done: false,
+        }))
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? { ...p, tasks: [...p.tasks, ...newTasks], items: [...p.items, ...newItems] }
+              : p
+          ),
+        }))
+        return { tasks: newTasks.length, items: newItems.length }
       },
 
       addItem: (projectId, title) =>
