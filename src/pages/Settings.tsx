@@ -15,6 +15,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.6',
+    date: '2026-06-13',
+    lines: [
+      'モバイルのヘッダーを整理（狭い画面ではバージョン番号・日時を非表示）',
+      '貼り付け欄フッターの折り返し崩れを修正',
+    ],
+  },
+  {
     version: '0.7.5',
     date: '2026-06-13',
     lines: [

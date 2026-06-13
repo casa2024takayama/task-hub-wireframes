@@ -77,9 +77,10 @@ export default function App() {
           <div className="flex items-center gap-2 min-w-0">
             <NavLink to="/" className="text-base font-bold font-serif tracking-wide text-slate-800 shrink-0 flex items-baseline gap-1">
               タスクハブ<span className="text-indigo-600">.</span>
-              <span className="text-[10px] font-mono font-normal text-slate-400">v{APP_VERSION}</span>
+              {/* バージョンは狭い画面だと窮屈なので sm 以上でのみ表示（設定画面にも表示あり） */}
+              <span className="hidden sm:inline text-[10px] font-mono font-normal text-slate-400">v{APP_VERSION}</span>
             </NavLink>
-            <span className="text-xs text-slate-500 font-mono tabular-nums truncate">
+            <span className="hidden sm:inline text-xs text-slate-500 font-mono tabular-nums truncate">
               {formatNow(now)}
             </span>
             <SyncBadge status={status} />

@@ -182,9 +182,10 @@ export default function Dashboard() {
           rows={2}
           placeholder="ここに入力 → 「受信箱へ」ボタンで保存"
         />
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-xs text-slate-400">後で振り分けOK。とにかく忘れない場所へ。</span>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 mt-2">
+          {/* 補足文は狭い画面だとボタンと重なるので sm 以上でのみ表示 */}
+          <span className="hidden sm:inline text-xs text-slate-400">後で振り分けOK。とにかく忘れない場所へ。</span>
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             {inbox.length > 0 && (
               <Link to="/inbox" className="text-xs text-rose-600 hover:underline">
                 受信箱 {inbox.length}件
