@@ -21,6 +21,7 @@ function normalizeProject(p: Project): Project {
     ...p,
     dueDate: p.dueDate ?? null,
     completedAt: p.completedAt ?? null,
+    sortOrder: p.sortOrder ?? null,
     tasks: (p.tasks ?? []).map(normalizeTask),
   }
 }

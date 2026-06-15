@@ -47,7 +47,25 @@ function RequesterBadge({ requestedBy }: { requestedBy?: string | null }) {
   )
 }
 
-function ProjectCard({ project }: { project: Project }) {
+interface ProjectCardProps {
+  project: Project
+  dragging: boolean
+  dragOver: boolean
+  onDragStart: () => void
+  onDragEnter: () => void
+  onDragEnd: () => void
+  onDrop: () => void
+}
+
+function ProjectCard({
+  project,
+  dragging,
+  dragOver,
+  onDragStart,
+  onDragEnter,
+  onDragEnd,
+  onDrop,
+}: ProjectCardProps) {
   const toggleTask = useAppStore((s) => s.toggleTask)
   const activeTasks = project.tasks.filter((t) => !t.done)
   const colorCls = COLOR_MAP[project.color] ?? COLOR_MAP['slate']
@@ -55,10 +73,24 @@ function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       to={`/projects/${project.id}`}
-      className={`block bg-white rounded-xl border-l-4 p-4 shadow-sm hover:shadow-md transition ${colorCls}`}
+      draggable
+      onDragStart={onDragStart}
+      onDragEnter={onDragEnter}
+      onDragOver={(e) => e.preventDefault()}
+      onDragEnd={onDragEnd}
+      onDrop={(e) => {
+        e.preventDefault()
+        onDrop()
+      }}
+      className={`block bg-white rounded-xl border-l-4 p-4 shadow-sm hover:shadow-md transition ${colorCls} ${
+        dragging ? 'opacity-40' : ''
+      } ${dragOver ? 'ring-2 ring-indigo-400' : ''}`}
     >
       <div className="flex items-start justify-between mb-1 gap-2">
-        <h3 className="text-sm font-bold text-slate-800">{project.name}</h3>
+        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          <span className="text-slate-300 cursor-grab select-none" title="ドラッグで並び替え" aria-hidden>⠿</span>
+          {project.name}
+        </h3>
         <span className={`text-[10px] px-2 py-0.5 rounded shrink-0 ${BADGE_MAP[project.type]}`}>
           {TYPE_LABEL[project.type]}
         </span>
@@ -114,8 +146,11 @@ export default function Dashboard() {
     toggleTask,
     deleteTask,
     assignTaskToProject,
+    reorderProjects,
   } = useAppStore()
   const [pasteText, setPasteText] = useState('')
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [overId, setOverId] = useState<string | null>(null)
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDue, setNewProjectDue] = useState('')
   const [showNewProject, setShowNewProject] = useState(false)
@@ -157,6 +192,12 @@ export default function Dashboard() {
   const sortedActiveProjects = useMemo(() => {
     const active = projects.filter((p) => p.status === 'active')
     return [...active].sort((a, b) => {
+      // 手動並び順（sortOrder）があればそれを優先。なければ締切順にフォールバック
+      const ao = a.sortOrder
+      const bo = b.sortOrder
+      if (ao != null && bo != null) return ao - bo
+      if (ao != null) return -1
+      if (bo != null) return 1
       const ad = a.dueDate
       const bd = b.dueDate
       if (!ad && !bd) return 0
@@ -343,7 +384,29 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {sortedActiveProjects.map((p) => (
-            <ProjectCard key={p.id} project={p} />
+            <ProjectCard
+              key={p.id}
+              project={p}
+              dragging={dragId === p.id}
+              dragOver={overId === p.id && dragId !== p.id}
+              onDragStart={() => setDragId(p.id)}
+              onDragEnter={() => setOverId(p.id)}
+              onDragEnd={() => {
+                setDragId(null)
+                setOverId(null)
+              }}
+              onDrop={() => {
+                if (dragId && dragId !== p.id) {
+                  const ids = sortedActiveProjects.map((x) => x.id)
+                  const from = ids.indexOf(dragId)
+                  const to = ids.indexOf(p.id)
+                  ids.splice(to, 0, ids.splice(from, 1)[0])
+                  reorderProjects(ids)
+                }
+                setDragId(null)
+                setOverId(null)
+              }}
+            />
           ))}
         </div>
       </section>

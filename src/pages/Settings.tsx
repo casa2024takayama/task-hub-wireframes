@@ -15,6 +15,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.7',
+    date: '2026-06-13',
+    lines: [
+      'ダッシュボードのプロジェクトカードをドラッグ＆ドロップで並び替え可能に',
+      '並び順は保存・同期。設定するまでは締切順で表示',
+    ],
+  },
+  {
     version: '0.7.6',
     date: '2026-06-13',
     lines: [

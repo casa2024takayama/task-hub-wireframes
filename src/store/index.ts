@@ -33,6 +33,8 @@ interface AppState {
   addProject: (name: string, type: Project['type'], dueDate?: string | null) => void
   updateProject: (id: string, patch: Partial<Omit<Project, 'id' | 'tasks' | 'items' | 'createdAt'>>) => void
   deleteProject: (id: string) => void
+  /** ダッシュボードのカードをドラッグで並び替え。渡された id 順に sortOrder を 0..n で振る */
+  reorderProjects: (orderedIds: string[]) => void
 
   // Tasks
   addTask: (
@@ -290,6 +292,16 @@ export const useAppStore = create<AppState>()(
         })),
 
       deleteProject: (id) => set((s) => ({ projects: s.projects.filter((p) => p.id !== id) })),
+
+      reorderProjects: (orderedIds) =>
+        set((s) => {
+          const rank = new Map(orderedIds.map((id, i) => [id, i]))
+          return {
+            projects: s.projects.map((p) =>
+              rank.has(p.id) ? { ...p, sortOrder: rank.get(p.id)! } : p
+            ),
+          }
+        }),
 
       addTask: (projectId, title, size, dueDate, requestedBy, originalPaste = null) =>
         set((s) => ({
@@ -556,7 +568,8 @@ export const useAppStore = create<AppState>()(
       name: 'task-hub-storage',
       // v2: Task.requestedBy / v3: TaskSize 4 段階・Task.originalPaste・Project.dueDate・Project.completedAt
       // v4: 週ボード（Task.weekStatus / waitFor / waitSince / roundLabel）
-      version: 4,
+      // v5: Project.sortOrder（ダッシュボードの手動並び）
+      version: 5,
       migrate: (persisted, fromVersion) => {
         if (!persisted) return persisted as AppState
         let state = persisted as Partial<AppState>
@@ -621,6 +634,16 @@ export const useAppStore = create<AppState>()(
               tasks: (p.tasks ?? []).map(fillTaskV4),
             })),
             unassignedTasks: (state.unassignedTasks ?? []).map(fillTaskV4),
+          }
+        }
+
+        if (fromVersion < 5) {
+          state = {
+            ...state,
+            projects: (state.projects ?? []).map((p) => ({
+              ...p,
+              sortOrder: (p as Project).sortOrder ?? null,
+            })),
           }
         }
 

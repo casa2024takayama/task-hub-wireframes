@@ -85,4 +85,6 @@ export interface Project {
   tasks: Task[]
   items: Item[]
   createdAt: string
+  /** ダッシュボードでの手動並び順。null のときは締切順にフォールバック */
+  sortOrder?: number | null
 }
