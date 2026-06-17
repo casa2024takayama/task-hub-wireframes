@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAppStore } from '../store'
 import { LinkifiedText } from '../lib/linkifyText'
 import { TASK_SIZE_OPTIONS, taskSizeBadgeClass, taskSizeShortLabel } from '../lib/taskSize'
 import { ROUND_TEMPLATES } from '../lib/roundTemplates'
-import type { TaskSize } from '../types'
+import { PROJECT_TYPE_OPTIONS } from '../lib/projectMeta'
+import type { ProjectType, TaskSize } from '../types'
 
 function taskAfterProjectDeadline(taskDue: string | null, projectDue: string | null): boolean {
   if (!taskDue || !projectDue) return false
@@ -13,11 +14,14 @@ function taskAfterProjectDeadline(taskDue: string | null, projectDue: string | n
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
-  const { projects, updateProject, addTask, toggleTask, deleteTask, addItem, toggleItem, deleteItem, createRound } = useAppStore()
+  const navigate = useNavigate()
+  const { projects, updateProject, deleteProject, addTask, toggleTask, deleteTask, moveTaskToProject, addItem, toggleItem, deleteItem, createRound } = useAppStore()
   const project = projects.find((p) => p.id === id)
 
   const [editNote, setEditNote] = useState(false)
   const [noteText, setNoteText] = useState('')
+  const [editName, setEditName] = useState(false)
+  const [nameText, setNameText] = useState('')
   const [newTask, setNewTask] = useState('')
   const [newTaskSize, setNewTaskSize] = useState<TaskSize>('small')
   const [newTaskDue, setNewTaskDue] = useState('')
@@ -40,6 +44,7 @@ export default function ProjectDetail() {
 
   const activeTasks = project.tasks.filter((t) => !t.done)
   const doneTasks = project.tasks.filter((t) => t.done)
+  const otherActiveProjects = projects.filter((p) => p.id !== project.id && p.status === 'active')
 
   function today() {
     return new Date().toISOString().split('T')[0]
@@ -109,7 +114,34 @@ export default function ProjectDetail() {
           <Link to="/" className="text-slate-400 hover:text-slate-600 text-sm shrink-0">
             ←
           </Link>
-          <h1 className="text-xl font-bold text-slate-800">{project.name}</h1>
+          {editName ? (
+            <input
+              autoFocus
+              value={nameText}
+              onChange={(e) => setNameText(e.target.value)}
+              onBlur={() => {
+                const v = nameText.trim()
+                if (v) updateProject(project.id, { name: v })
+                setEditName(false)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                if (e.key === 'Escape') setEditName(false)
+              }}
+              className="text-xl font-bold text-slate-800 border-b border-indigo-300 bg-transparent focus:outline-none"
+            />
+          ) : (
+            <h1
+              className="text-xl font-bold text-slate-800 cursor-text hover:bg-slate-50 rounded px-1 -mx-1"
+              title="クリックで名前を編集"
+              onClick={() => {
+                setNameText(project.name)
+                setEditName(true)
+              }}
+            >
+              {project.name}
+            </h1>
+          )}
           <span
             className={`text-xs px-2 py-0.5 rounded ${
               project.status === 'active'
@@ -121,6 +153,18 @@ export default function ProjectDetail() {
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
+          <label className="flex items-center gap-1.5 text-slate-600">
+            <span className="text-xs whitespace-nowrap">種別</span>
+            <select
+              value={project.type}
+              onChange={(e) => updateProject(project.id, { type: e.target.value as ProjectType })}
+              className="border border-slate-200 rounded-lg px-2 py-1 text-xs bg-white focus:outline-none focus:border-indigo-400"
+            >
+              {PROJECT_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </label>
           <label className="flex items-center gap-1.5 text-slate-600">
             <span className="text-xs whitespace-nowrap">締切</span>
             <input
@@ -148,6 +192,22 @@ export default function ProjectDetail() {
               再開（完了日のみ取り消し）
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                confirm(
+                  `「${project.name}」を削除します。中のタスク ${project.tasks.length} 件・アイテム ${project.items.length} 件も一緒に削除されます。よろしいですか？`
+                )
+              ) {
+                deleteProject(project.id)
+                navigate('/')
+              }
+            }}
+            className="text-xs border border-rose-300 text-rose-600 px-3 py-1.5 rounded-lg hover:bg-rose-50"
+          >
+            削除
+          </button>
         </div>
       </div>
       {project.status === 'completed' && project.completedAt && (
@@ -346,6 +406,21 @@ export default function ProjectDetail() {
                         <span className="text-[10px] bg-rose-500 text-white px-1.5 py-0.5 rounded font-medium">
                           期限切れ
                         </span>
+                      )}
+                      {otherActiveProjects.length > 0 && (
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            if (e.target.value) moveTaskToProject(project.id, t.id, e.target.value)
+                          }}
+                          title="別プロジェクトへ移動"
+                          className="text-[10px] border border-slate-200 rounded px-1 py-0.5 bg-white text-slate-500 focus:outline-none focus:border-indigo-400 max-w-[88px]"
+                        >
+                          <option value="">→ 移動</option>
+                          {otherActiveProjects.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
                       )}
                       <button
                         onClick={() => deleteTask(project.id, t.id)}

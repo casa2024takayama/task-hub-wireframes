@@ -49,6 +49,8 @@ interface AppState {
   toggleTask: (projectId: string | null, taskId: string) => void
   deleteTask: (projectId: string | null, taskId: string) => void
   assignTaskToProject: (taskId: string, projectId: string) => void
+  /** 既存タスクを別プロジェクトへ移動（所属替えのみ。他フィールドは保持） */
+  moveTaskToProject: (fromProjectId: string, taskId: string, toProjectId: string) => void
 
   // 週ボード（3階）
   setTaskWeekStatus: (
@@ -467,6 +469,22 @@ export const useAppStore = create<AppState>()(
         }))
         return { tasks: newTasks.length, items: newItems.length }
       },
+
+      moveTaskToProject: (fromProjectId, taskId, toProjectId) =>
+        set((s) => {
+          if (fromProjectId === toProjectId) return s
+          const from = s.projects.find((p) => p.id === fromProjectId)
+          const task = from?.tasks.find((t) => t.id === taskId)
+          if (!task) return s
+          const moved: Task = { ...task, projectId: toProjectId }
+          return {
+            projects: s.projects.map((p) => {
+              if (p.id === fromProjectId) return { ...p, tasks: p.tasks.filter((t) => t.id !== taskId) }
+              if (p.id === toProjectId) return { ...p, tasks: [...p.tasks, moved] }
+              return p
+            }),
+          }
+        }),
 
       addItem: (projectId, title) =>
         set((s) => ({

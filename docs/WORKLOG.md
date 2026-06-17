@@ -384,6 +384,29 @@
   - ユーザーの実週報 22 件で検証：完了13/進行中4/待ち1/来週4、新規プロジェクト7本、週報の往復再現を確認
   - **注意**: 同じ週報を2回取り込むと重複する（重複検知なし。一回きりの移行用）
 
+## 2026-06-17 / Claude Code (Claude Fable 5) — v0.7.8 プロジェクト編集＋タスク移動
+
+### 背景
+ユーザーの実データで施策分類が重複（旧カンバン由来の常設「展示会・イベント」の中に社外イベント＝デブサミ系タスクが混在）。整理の合意：展示会・イベント→「社内向けイベント」に改名し常設のまま／社外イベントは単発に分離／MOV Radio・他部門依頼・InfoSquare（6・10・2月の当番制）は常設。だが ProjectDetail に名前・種別の編集UIが無く実行できなかった。
+
+### やったこと
+- `src/lib/projectMeta.ts` 新規：種別ラベル/バッジ/セレクタ選択肢を共通化（Dashboard の TYPE_LABEL/BADGE_MAP を移設・Dashboard と ProjectDetail で共用）
+- ストア `moveTaskToProject(fromProjectId, taskId, toProjectId)`：所属替えのみ（weekStatus/waitFor/dueDate/done 等は保持）。データモデル変更なし＝persist バンプ不要
+- ProjectDetail ヘッダー：名前インライン編集（再開メモと同パターン）／種別セレクタ（updateProject({type})）／削除ボタン（confirm→deleteProject→navigate('/')）
+- 各 activeTask 行に「→ 移動」セレクタ（他アクティブPJへ moveTaskToProject）
+
+### 検証（dev・ブラウザ実走）
+- タスク移動：p1→社内Web に移動、元から消える・移動先に出現 ✓
+- 種別変更：単発→常設、ダッシュボードのバッジ即追従 ✓
+- 名前編集：→「社外イベント登壇」、ダッシュボードのカード名も追従 ✓
+- （テスト注：React の onBlur は focusout 委譲なので eval では focusout(bubbles) で発火させた。実ユーザー操作は通常の blur で問題なし）
+
+### 申し送り
+- マージ機能は作っていない。重複統合は「単発箱を作る→タスク移動→空箱を削除」の手順
+- スマホは select 方式なのでタッチでも種別変更・移動は可能（DnD ではない）
+- **未プッシュ**。ユーザー指示でプッシュ
+- 次の大物：v0.8 AIレビュー（工数単価 小0.5h/中2h/大4h/特大8h の確認待ち）
+
 ## 2026-06-13 / Claude Code (Claude Fable 5) — v0.7.5 回テンプレ ＆ v0.8 AIレビュー発案
 
 ### やったこと（v0.7.5）

@@ -15,6 +15,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.8',
+    date: '2026-06-17',
+    lines: [
+      'プロジェクトの名前・種別の編集と削除（プロジェクト詳細）',
+      'タスクを別プロジェクトへ移動（各タスク行の「→ 移動」）',
+    ],
+  },
+  {
     version: '0.7.7',
     date: '2026-06-13',
     lines: [

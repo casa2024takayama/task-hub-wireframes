@@ -5,6 +5,7 @@ import type { Project } from '../types'
 import { LinkifiedText } from '../lib/linkifyText'
 import { taskSizeBadgeClass, taskSizeShortLabel } from '../lib/taskSize'
 import { dueBadge, tomorrowStr } from '../lib/due'
+import { PROJECT_TYPE_BADGE, PROJECT_TYPE_LABEL } from '../lib/projectMeta'
 
 const COLOR_MAP: Record<string, string> = {
   indigo: 'border-indigo-400 bg-indigo-50',
@@ -14,21 +15,8 @@ const COLOR_MAP: Record<string, string> = {
   slate: 'border-slate-400 bg-slate-50',
 }
 
-const BADGE_MAP: Record<string, string> = {
-  'one-time': 'bg-slate-100 text-slate-600',
-  'routine-weekly': 'bg-indigo-100 text-indigo-700',
-  'routine-monthly': 'bg-purple-100 text-purple-700',
-  'routine-quarterly': 'bg-purple-100 text-purple-700',
-  ongoing: 'bg-emerald-100 text-emerald-700',
-}
-
-const TYPE_LABEL: Record<string, string> = {
-  'one-time': '単発',
-  'routine-weekly': '週次ルーチン',
-  'routine-monthly': '月次ルーチン',
-  'routine-quarterly': '四半期ルーチン',
-  ongoing: '常設',
-}
+const BADGE_MAP = PROJECT_TYPE_BADGE
+const TYPE_LABEL = PROJECT_TYPE_LABEL
 
 /** 依頼者バッジ。"自分"=アイデアは黄色、他人の依頼は薄い藍 */
 function RequesterBadge({ requestedBy }: { requestedBy?: string | null }) {
