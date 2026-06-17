@@ -18,6 +18,13 @@ const COLOR_MAP: Record<string, string> = {
 const BADGE_MAP = PROJECT_TYPE_BADGE
 const TYPE_LABEL = PROJECT_TYPE_LABEL
 
+// ダッシュボードのプロジェクトを 単発／常設／ルーチン の3グループ見出しで分ける
+const PROJECT_GROUPS: { label: string; types: Project['type'][] }[] = [
+  { label: '単発', types: ['one-time'] },
+  { label: '常設', types: ['ongoing'] },
+  { label: 'ルーチン', types: ['routine-weekly', 'routine-monthly', 'routine-quarterly'] },
+]
+
 /** 依頼者バッジ。"自分"=アイデアは黄色、他人の依頼は薄い藍 */
 function RequesterBadge({ requestedBy }: { requestedBy?: string | null }) {
   if (!requestedBy) return null
@@ -370,32 +377,46 @@ export default function Dashboard() {
           </form>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {sortedActiveProjects.map((p) => (
-            <ProjectCard
-              key={p.id}
-              project={p}
-              dragging={dragId === p.id}
-              dragOver={overId === p.id && dragId !== p.id}
-              onDragStart={() => setDragId(p.id)}
-              onDragEnter={() => setOverId(p.id)}
-              onDragEnd={() => {
-                setDragId(null)
-                setOverId(null)
-              }}
-              onDrop={() => {
-                if (dragId && dragId !== p.id) {
-                  const ids = sortedActiveProjects.map((x) => x.id)
-                  const from = ids.indexOf(dragId)
-                  const to = ids.indexOf(p.id)
-                  ids.splice(to, 0, ids.splice(from, 1)[0])
-                  reorderProjects(ids)
-                }
-                setDragId(null)
-                setOverId(null)
-              }}
-            />
-          ))}
+        <div className="space-y-5">
+          {PROJECT_GROUPS.map((group) => {
+            const groupProjects = sortedActiveProjects.filter((p) => group.types.includes(p.type))
+            if (groupProjects.length === 0) return null
+            return (
+              <div key={group.label}>
+                <h3 className="text-xs font-bold text-slate-500 mb-2">
+                  {group.label} <span className="text-slate-400 font-normal">{groupProjects.length}</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {groupProjects.map((p) => (
+                    <ProjectCard
+                      key={p.id}
+                      project={p}
+                      dragging={dragId === p.id}
+                      dragOver={overId === p.id && dragId !== p.id}
+                      onDragStart={() => setDragId(p.id)}
+                      onDragEnter={() => setOverId(p.id)}
+                      onDragEnd={() => {
+                        setDragId(null)
+                        setOverId(null)
+                      }}
+                      onDrop={() => {
+                        // 並び替えは同じグループ内のみ（締切順フォールバックを尊重しつつ手動順を保存）
+                        if (dragId && dragId !== p.id && groupProjects.some((x) => x.id === dragId)) {
+                          const ids = groupProjects.map((x) => x.id)
+                          const from = ids.indexOf(dragId)
+                          const to = ids.indexOf(p.id)
+                          ids.splice(to, 0, ids.splice(from, 1)[0])
+                          reorderProjects(ids)
+                        }
+                        setDragId(null)
+                        setOverId(null)
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </section>
     </div>

@@ -183,12 +183,12 @@ function BoardCard({ task }: { task: BoardTask }) {
           </button>
           <button
             onClick={() => setTaskWeekStatus(task.projectId, task.id, null)}
-            className="h-[23px] px-1.5 text-[10px] rounded-md flex items-center justify-center hover:opacity-70 whitespace-nowrap"
+            className="w-[23px] h-[23px] text-xs rounded-md flex items-center justify-center hover:opacity-70"
             style={{ border: `1px solid ${LINE}`, background: '#fff', color: INK_SOFT }}
             title="今週やるから外してバックログへ戻す"
             aria-label="バックログへ戻す"
           >
-            ↩︎ バックログ
+            ↩︎
           </button>
         </div>
       </div>

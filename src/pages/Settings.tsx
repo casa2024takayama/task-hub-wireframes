@@ -15,6 +15,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.10',
+    date: '2026-06-17',
+    lines: [
+      'ダッシュボードのプロジェクトを 単発／常設／ルーチン の見出しで3分割',
+      '週ボードの「バックログへ戻す」を ↩︎ アイコンのみに',
+    ],
+  },
+  {
     version: '0.7.9',
     date: '2026-06-17',
     lines: [
