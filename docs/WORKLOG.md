@@ -384,6 +384,28 @@
   - ユーザーの実週報 22 件で検証：完了13/進行中4/待ち1/来週4、新規プロジェクト7本、週報の往復再現を確認
   - **注意**: 同じ週報を2回取り込むと重複する（重複検知なし。一回きりの移行用）
 
+## 2026-06-17 / Claude Code (Claude Fable 5) — v0.7.9 タスク名編集＋週ボードのバックログ表記
+
+### 背景・質問への回答
+ユーザー質問「今週やるの期限でないものをバックログに入れたい。仕様は？」「登録後タスク名を変えたい」。
+- 週ボードの仕様: weekStatus!=null=手動配置で居座る／weekStatus==null かつ締切今週=自動着地（締切が外れれば自動でバックログへ）。手動配置を戻す手段は従来 × ボタンのみで、削除と紛らわしかった
+- タスク改名は未実装だった
+
+### やったこと
+- ストア `updateTaskTitle(projectId, taskId, title)`（projectId null=未割当。空文字は無視）
+- ProjectDetail: activeTask のタイトルをクリック→input でインライン改名（editTaskId / taskTitleText state）
+- Week.tsx BoardCard: タイトルをクリック→input でインライン改名（旧カンバンの contentEditable 相当）
+- Week.tsx: 「×（外す）」を **`↩︎ バックログ`** ラベルに変更（setTaskWeekStatus(null) は同じ）。自動追い出しはしない方針を CHANGELOG に明記
+- データモデル変更なし＝persist バンプ不要
+
+### 検証（dev・ブラウザ実走）
+- カード改名: 「デザインFBをSlackに返信（改名テスト）」で確定・永続化 ✓（onBlur は focusout 委譲なので eval は focusout で発火）
+- ↩︎ バックログ: weekStatus が null に ✓（ただし締切が今週のタスクは自動着地で再表示＝正しい挙動）
+
+### 申し送り
+- **未プッシュ**。ユーザー指示でプッシュ
+- 次の大物: v0.8 AIレビュー（工数単価 小0.5h/中2h/大4h/特大8h の確認待ち）
+
 ## 2026-06-17 / Claude Code (Claude Fable 5) — v0.7.8 プロジェクト編集＋タスク移動
 
 ### 背景

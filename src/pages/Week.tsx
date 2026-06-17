@@ -76,10 +76,13 @@ function WaitRow({ task }: { task: BoardTask }) {
 
 function BoardCard({ task }: { task: BoardTask }) {
   const setTaskWeekStatus = useAppStore((s) => s.setTaskWeekStatus)
+  const updateTaskTitle = useAppStore((s) => s.updateTaskTitle)
   const colIdx = COLS.findIndex((c) => c.id === task.effectiveStatus)
   const badge = dueBadge(task.dueDate)
   const isDone = task.effectiveStatus === 'done'
   const color = projectColor(task.projectId)
+  const [editing, setEditing] = useState(false)
+  const [titleText, setTitleText] = useState(task.title)
 
   function move(toIdx: number) {
     const col = COLS[toIdx]
@@ -97,12 +100,38 @@ function BoardCard({ task }: { task: BoardTask }) {
         boxShadow: '0 1px 2px rgba(43,38,32,.08),0 4px 14px rgba(43,38,32,.06)',
       }}
     >
-      <div
-        className="text-[13.5px] leading-normal break-words"
-        style={{ color: isDone ? INK_SOFT : INK, textDecoration: isDone ? 'line-through' : 'none' }}
-      >
-        {task.title}
-      </div>
+      {editing ? (
+        <input
+          autoFocus
+          value={titleText}
+          onChange={(e) => setTitleText(e.target.value)}
+          onBlur={() => {
+            updateTaskTitle(task.projectId, task.id, titleText)
+            setEditing(false)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+            if (e.key === 'Escape') {
+              setTitleText(task.title)
+              setEditing(false)
+            }
+          }}
+          className="w-full text-[13.5px] leading-normal bg-transparent focus:outline-none"
+          style={{ color: INK, borderBottom: `1px solid ${ACCENT}` }}
+        />
+      ) : (
+        <div
+          className="text-[13.5px] leading-normal break-words cursor-text"
+          style={{ color: isDone ? INK_SOFT : INK, textDecoration: isDone ? 'line-through' : 'none' }}
+          title="クリックで名前を編集"
+          onClick={() => {
+            setTitleText(task.title)
+            setEditing(true)
+          }}
+        >
+          {task.title}
+        </div>
+      )}
       {task.effectiveStatus === 'wait' && <WaitRow task={task} />}
       <div className="flex items-center justify-between mt-2 gap-1.5">
         <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
@@ -154,12 +183,12 @@ function BoardCard({ task }: { task: BoardTask }) {
           </button>
           <button
             onClick={() => setTaskWeekStatus(task.projectId, task.id, null)}
-            className="w-[23px] h-[23px] text-xs rounded-md flex items-center justify-center hover:opacity-70"
+            className="h-[23px] px-1.5 text-[10px] rounded-md flex items-center justify-center hover:opacity-70 whitespace-nowrap"
             style={{ border: `1px solid ${LINE}`, background: '#fff', color: INK_SOFT }}
-            title="ボードから外す（バックログへ戻す）"
-            aria-label="ボードから外す"
+            title="今週やるから外してバックログへ戻す"
+            aria-label="バックログへ戻す"
           >
-            ×
+            ↩︎ バックログ
           </button>
         </div>
       </div>

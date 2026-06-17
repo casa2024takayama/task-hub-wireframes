@@ -60,6 +60,8 @@ interface AppState {
     waitFor?: string
   ) => void
   updateTaskWait: (projectId: string | null, taskId: string, waitFor: string) => void
+  /** タスク名の変更。projectId === null は未割当タスク */
+  updateTaskTitle: (projectId: string | null, taskId: string, title: string) => void
   closeWeek: () => void
 
   // ルーチンの「回」をテンプレから生成
@@ -419,6 +421,17 @@ export const useAppStore = create<AppState>()(
 
       updateTaskWait: (projectId, taskId, waitFor) => {
         const patch = (t: Task): Task => (t.id === taskId ? { ...t, waitFor } : t)
+        set((s) =>
+          projectId === null
+            ? { unassignedTasks: s.unassignedTasks.map(patch) }
+            : { projects: s.projects.map((p) => ({ ...p, tasks: p.tasks.map(patch) })) }
+        )
+      },
+
+      updateTaskTitle: (projectId, taskId, title) => {
+        const trimmed = title.trim()
+        if (!trimmed) return
+        const patch = (t: Task): Task => (t.id === taskId ? { ...t, title: trimmed } : t)
         set((s) =>
           projectId === null
             ? { unassignedTasks: s.unassignedTasks.map(patch) }

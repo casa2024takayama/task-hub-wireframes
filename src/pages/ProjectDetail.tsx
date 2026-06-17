@@ -15,13 +15,15 @@ function taskAfterProjectDeadline(taskDue: string | null, projectDue: string | n
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { projects, updateProject, deleteProject, addTask, toggleTask, deleteTask, moveTaskToProject, addItem, toggleItem, deleteItem, createRound } = useAppStore()
+  const { projects, updateProject, deleteProject, addTask, toggleTask, deleteTask, moveTaskToProject, updateTaskTitle, addItem, toggleItem, deleteItem, createRound } = useAppStore()
   const project = projects.find((p) => p.id === id)
 
   const [editNote, setEditNote] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [editName, setEditName] = useState(false)
   const [nameText, setNameText] = useState('')
+  const [editTaskId, setEditTaskId] = useState<string | null>(null)
+  const [taskTitleText, setTaskTitleText] = useState('')
   const [newTask, setNewTask] = useState('')
   const [newTaskSize, setNewTaskSize] = useState<TaskSize>('small')
   const [newTaskDue, setNewTaskDue] = useState('')
@@ -387,7 +389,33 @@ export default function ProjectDetail() {
                     className="w-4 h-4 accent-indigo-600 shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-slate-800">{t.title}</div>
+                    {editTaskId === t.id ? (
+                      <input
+                        autoFocus
+                        value={taskTitleText}
+                        onChange={(e) => setTaskTitleText(e.target.value)}
+                        onBlur={() => {
+                          updateTaskTitle(project.id, t.id, taskTitleText)
+                          setEditTaskId(null)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                          if (e.key === 'Escape') setEditTaskId(null)
+                        }}
+                        className="w-full text-sm text-slate-800 border-b border-indigo-300 bg-transparent focus:outline-none"
+                      />
+                    ) : (
+                      <div
+                        className="text-sm text-slate-800 cursor-text hover:bg-slate-50 rounded px-1 -mx-1"
+                        title="クリックで名前を編集"
+                        onClick={() => {
+                          setTaskTitleText(t.title)
+                          setEditTaskId(t.id)
+                        }}
+                      >
+                        {t.title}
+                      </div>
+                    )}
                     {t.requestedBy && (
                       <div className="text-[11px] text-slate-500 mt-0.5">
                         {t.requestedBy === '自分' ? '💡 アイデア' : `from ${t.requestedBy}`}
