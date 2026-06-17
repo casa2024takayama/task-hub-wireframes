@@ -4,6 +4,7 @@ import type { Project, Task, InboxItem, InboxSuggestion, WeekStatus } from '../t
 import { ensureAppDataShape } from '../lib/ensureDataShape'
 import type { KanbanImportItem } from '../lib/importKanbanReport'
 import { getRoundTemplate, applyOffset } from '../lib/roundTemplates'
+import { weekRange } from '../lib/due'
 
 function uid() {
   return crypto.randomUUID()
@@ -333,11 +334,17 @@ export const useAppStore = create<AppState>()(
         })),
 
       toggleTask: (projectId, taskId) => {
+        const weekEnd = weekRange().end
         const stamp = (t: Task): Task => {
           const nextDone = !t.done
-          // ボードに出ているタスクは done と weekStatus を同期させる
-          const weekStatus =
-            t.weekStatus == null ? t.weekStatus : nextDone ? 'done' : 'todo'
+          // ボードに出ているタスクは done と weekStatus を同期。
+          // 自動着地（weekStatus=null だが締切が今週）のタスクを完了にしたら
+          // 完了列に出すため 'done' に昇格する（トップの帯/詳細から完了にしても揃う）
+          const inThisWeek = t.dueDate != null && t.dueDate <= weekEnd
+          let weekStatus: Task['weekStatus']
+          if (t.weekStatus != null) weekStatus = nextDone ? 'done' : 'todo'
+          else if (nextDone && inThisWeek) weekStatus = 'done'
+          else weekStatus = t.weekStatus
           return {
             ...t,
             done: nextDone,

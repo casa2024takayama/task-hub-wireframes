@@ -384,6 +384,27 @@
   - ユーザーの実週報 22 件で検証：完了13/進行中4/待ち1/来週4、新規プロジェクト7本、週報の往復再現を確認
   - **注意**: 同じ週報を2回取り込むと重複する（重複検知なし。一回きりの移行用）
 
+## 2026-06-17 / Claude Code (Claude Fable 5) — v0.7.11 週ボード：列ごとボタン＋締切順＋完了の一貫化
+
+### 背景（週モード実運用フィードバック）
+1. カードの3つ目ボタンが全列↩固定で列ごとに合わない
+2. 各列が締切順でない
+3. トップの小タスク帯と週ボードは同じ Task。自動着地（weekStatus=null・締切今週）をトップで完了にすると完了列に出ず消える非対称（週報・履歴には残る）。ユーザー決定＝完了列に出す
+
+### やったこと
+- **store `toggleTask` 一貫化**: `weekRange().end` を使い、完了化するタスクが締切今週内なら weekStatus を 'done' に昇格（weekStatus=null の自動着地分も完了列へ）。完了列の filter は従来どおり weekStatus==='done'、◯/完了をクリアも従来どおり null 化でOK。締切が今週でない/締切なしを他画面で完了にしても null のまま＝週ボードに出ない
+- **Week.tsx 列ごとボタン**: effectiveStatus で出し分け（todo=↩ setTaskWeekStatus(null) / doing・wait=× deleteTask+confirm / done=◯ setTaskWeekStatus(null)）。◀▶ は全列維持。BoardCard に deleteTask セレクタ追加
+- **Week.tsx 締切ソート**: board 配列を締切昇順（null 末尾）で安定ソート→各列 filter が順序継承
+
+### 検証（dev・ブラウザ実走）
+- トップ帯で自動着地タスク完了→weekStatus 'done' 昇格・週ボード完了列に表示 ✓
+- ボタン: todo=↩(2) / done=◯(1) / doing=×（confirmメッセージ正・OKで削除 4→3）✓
+- データモデル変更なし＝persist バンプなし
+
+### 申し送り
+- **未プッシュ**。ユーザー指示でプッシュ
+- 次の大物: v0.8 AIレビュー（工数単価 小0.5h/中2h/大4h/特大8h の確認待ち）
+
 ## 2026-06-17 / Claude Code (Claude Fable 5) — v0.7.9 タスク名編集＋週ボードのバックログ表記
 
 ### 背景・質問への回答

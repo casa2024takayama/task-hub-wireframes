@@ -77,6 +77,7 @@ function WaitRow({ task }: { task: BoardTask }) {
 function BoardCard({ task }: { task: BoardTask }) {
   const setTaskWeekStatus = useAppStore((s) => s.setTaskWeekStatus)
   const updateTaskTitle = useAppStore((s) => s.updateTaskTitle)
+  const deleteTask = useAppStore((s) => s.deleteTask)
   const colIdx = COLS.findIndex((c) => c.id === task.effectiveStatus)
   const badge = dueBadge(task.dueDate)
   const isDone = task.effectiveStatus === 'done'
@@ -181,15 +182,41 @@ function BoardCard({ task }: { task: BoardTask }) {
           >
             ▶
           </button>
-          <button
-            onClick={() => setTaskWeekStatus(task.projectId, task.id, null)}
-            className="w-[23px] h-[23px] text-xs rounded-md flex items-center justify-center hover:opacity-70"
-            style={{ border: `1px solid ${LINE}`, background: '#fff', color: INK_SOFT }}
-            title="今週やるから外してバックログへ戻す"
-            aria-label="バックログへ戻す"
-          >
-            ↩︎
-          </button>
+          {task.effectiveStatus === 'todo' && (
+            <button
+              onClick={() => setTaskWeekStatus(task.projectId, task.id, null)}
+              className="w-[23px] h-[23px] text-xs rounded-md flex items-center justify-center hover:opacity-70"
+              style={{ border: `1px solid ${LINE}`, background: '#fff', color: INK_SOFT }}
+              title="今週やるから外してバックログへ戻す"
+              aria-label="バックログへ戻す"
+            >
+              ↩︎
+            </button>
+          )}
+          {(task.effectiveStatus === 'doing' || task.effectiveStatus === 'wait') && (
+            <button
+              onClick={() => {
+                if (confirm(`「${task.title}」を削除しますか？`)) deleteTask(task.projectId, task.id)
+              }}
+              className="w-[23px] h-[23px] text-xs rounded-md flex items-center justify-center hover:opacity-70"
+              style={{ border: `1px solid ${LINE}`, background: '#fff', color: ACCENT }}
+              title="このタスクを削除"
+              aria-label="削除"
+            >
+              ×
+            </button>
+          )}
+          {task.effectiveStatus === 'done' && (
+            <button
+              onClick={() => setTaskWeekStatus(task.projectId, task.id, null)}
+              className="w-[23px] h-[23px] text-xs rounded-md flex items-center justify-center hover:opacity-70"
+              style={{ border: `1px solid ${LINE}`, background: '#fff', color: INK_SOFT }}
+              title="この完了カードを盤面から下ろす（完了履歴は残る）"
+              aria-label="完了をクリア"
+            >
+              ◯
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -225,6 +252,13 @@ export default function Week() {
         backlog.push(t)
       }
     }
+    // 各列を締切が早い順に（期限切れ→今日→近い順→…→締切なしは末尾）
+    board.sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0
+      if (!a.dueDate) return 1
+      if (!b.dueDate) return -1
+      return a.dueDate.localeCompare(b.dueDate)
+    })
     return { board, backlog }
   }, [projects, unassignedTasks, end])
 

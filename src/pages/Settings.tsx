@@ -15,6 +15,15 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.11',
+    date: '2026-06-17',
+    lines: [
+      '週ボードのカードボタンを列ごとに最適化（今週やる=↩︎ / 着手中・待ち=× / 完了=◯）',
+      '各列を締切が早い順に並び替え',
+      'トップやプロジェクト詳細で完了にしたタスクも週ボードの完了列に表示',
+    ],
+  },
+  {
     version: '0.7.10',
     date: '2026-06-17',
     lines: [
