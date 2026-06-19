@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAppStore } from '../store'
 import { LinkifiedText } from '../lib/linkifyText'
@@ -20,6 +20,19 @@ export default function ProjectDetail() {
 
   const [editNote, setEditNote] = useState(false)
   const [noteText, setNoteText] = useState('')
+  const [noteExpanded, setNoteExpanded] = useState(false)
+  const noteRef = useRef<HTMLTextAreaElement>(null)
+
+  // 編集モードに入ったら textarea を内容の高さに合わせる
+  function autoGrowNote() {
+    const el = noteRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }
+  useEffect(() => {
+    if (editNote) autoGrowNote()
+  }, [editNote])
   const [editName, setEditName] = useState(false)
   const [nameText, setNameText] = useState('')
   const [editTaskId, setEditTaskId] = useState<string | null>(null)
@@ -47,6 +60,8 @@ export default function ProjectDetail() {
   const activeTasks = project.tasks.filter((t) => !t.done)
   const doneTasks = project.tasks.filter((t) => t.done)
   const otherActiveProjects = projects.filter((p) => p.id !== project.id && p.status === 'active')
+  const noteLineCount = project.resumeNote ? project.resumeNote.split('\n').length : 0
+  const noteIsLong = noteLineCount > 5 || project.resumeNote.length > 200
 
   function today() {
     return new Date().toISOString().split('T')[0]
@@ -239,19 +254,35 @@ export default function ProjectDetail() {
         {editNote ? (
           <textarea
             autoFocus
+            ref={noteRef}
             value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            rows={3}
-            className="w-full border border-yellow-200 rounded-lg p-2 text-sm focus:outline-none focus:border-yellow-400 bg-white resize-none"
+            onChange={(e) => {
+              setNoteText(e.target.value)
+              autoGrowNote()
+            }}
+            rows={5}
+            className="w-full border border-yellow-200 rounded-lg p-2 text-sm focus:outline-none focus:border-yellow-400 bg-white resize-y min-h-[7.5rem]"
           />
-        ) : (
-          <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-            {project.resumeNote ? (
+        ) : project.resumeNote ? (
+          <>
+            <p
+              className={`text-sm text-slate-700 leading-relaxed whitespace-pre-wrap ${
+                noteExpanded ? '' : 'line-clamp-5'
+              }`}
+            >
               <LinkifiedText text={project.resumeNote} />
-            ) : (
-              <span className="text-slate-400 italic">メモなし — 「編集」で追加</span>
+            </p>
+            {noteIsLong && (
+              <button
+                onClick={() => setNoteExpanded((v) => !v)}
+                className="mt-1 text-xs text-yellow-700 hover:underline"
+              >
+                {noteExpanded ? '▲ 折りたたむ' : `▼ もっと見る（全 ${noteLineCount} 行）`}
+              </button>
             )}
-          </p>
+          </>
+        ) : (
+          <p className="text-sm text-slate-400 italic">メモなし — 「編集」で追加</p>
         )}
       </section>
 

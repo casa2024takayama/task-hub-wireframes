@@ -15,6 +15,14 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.12',
+    date: '2026-06-19',
+    lines: [
+      '再開メモを普段は5行に折りたたみ表示（長文は「もっと見る」で展開）',
+      '再開メモの編集を内容に合わせたオートリサイズに',
+    ],
+  },
+  {
     version: '0.7.11',
     date: '2026-06-17',
     lines: [
