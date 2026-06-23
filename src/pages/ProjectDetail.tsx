@@ -23,15 +23,23 @@ export default function ProjectDetail() {
   const [noteExpanded, setNoteExpanded] = useState(false)
   const noteRef = useRef<HTMLTextAreaElement>(null)
 
-  // 編集モードに入ったら textarea を内容の高さに合わせる
+  // 編集モードの textarea を内容に合わせて伸ばすが、画面の約2/3で頭打ちにし
+  // それ以上は欄内スクロール（長文でも入力欄がビューポートに収まり、
+  // ブラウザがキャレット位置を欄内で自動追従するので上部を編集しても見える）
   function autoGrowNote() {
     const el = noteRef.current
     if (!el) return
+    const maxPx = Math.round(window.innerHeight * 0.65)
     el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
+    el.style.height = `${Math.min(el.scrollHeight, maxPx)}px`
+    el.style.overflowY = el.scrollHeight > maxPx ? 'auto' : 'hidden'
   }
   useEffect(() => {
-    if (editNote) autoGrowNote()
+    if (!editNote) return
+    autoGrowNote()
+    // 画面回転・リサイズで上限が変わるため追従
+    window.addEventListener('resize', autoGrowNote)
+    return () => window.removeEventListener('resize', autoGrowNote)
   }, [editNote])
   const [editName, setEditName] = useState(false)
   const [nameText, setNameText] = useState('')

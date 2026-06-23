@@ -384,6 +384,24 @@
   - ユーザーの実週報 22 件で検証：完了13/進行中4/待ち1/来週4、新規プロジェクト7本、週報の往復再現を確認
   - **注意**: 同じ週報を2回取り込むと重複する（重複検知なし。一回きりの移行用）
 
+## 2026-06-20 / Claude Code (Claude Fable 5) — v0.7.13 再開メモ編集の高さを画面内に収める
+
+### 背景
+v0.7.12 のオートリサイズが内容の全高（150行≒3000px）まで伸び、画面より高くなって上部編集時にカーソルが画面外に。編集はできるが見えない。ユーザー決定＝画面の約2/3で頭打ち＋欄内スクロール。
+
+### やったこと（ProjectDetail.tsx のみ）
+- `autoGrowNote()`: `maxPx = innerHeight*0.65` を上限に `height = min(scrollHeight, maxPx)`、超過時 `overflowY=auto`（欄内スクロール）
+- `useEffect([editNote])` で編集中のみ window resize リスナを張り `autoGrowNote()` を追従（回転対応）、クリーンアップ付き
+
+### 検証（dev・mobile 375x812 実走）
+- 150行入力→textarea 528px（=812*0.65）で頭打ち・overflowY auto・scrollHeight 3016 ✓
+- textarea が viewport 内（top244/bottom772）に収まる ✓ / 欄内スクロール可（scrollTop 2490）✓
+- 実キー入力時のキャレット追従は textarea ネイティブ挙動（欄内スクロールで担保）
+
+### 申し送り
+- **未プッシュ**。ユーザー指示でプッシュ
+- 次の大物: v0.8 AIレビュー（工数単価 小0.5h/中2h/大4h/特大8h の確認待ち）
+
 ## 2026-06-19 / Claude Code (Claude Fable 5) — v0.7.12 再開メモの折りたたみ＋オートリサイズ
 
 ### 背景（実運用フィードバック）

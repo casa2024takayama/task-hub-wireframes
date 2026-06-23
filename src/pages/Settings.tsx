@@ -15,6 +15,13 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.13',
+    date: '2026-06-20',
+    lines: [
+      '再開メモの編集欄を画面の約2/3で頭打ちにし欄内スクロールに（長文の上部編集が画面外に出る問題を解消）',
+    ],
+  },
+  {
     version: '0.7.12',
     date: '2026-06-19',
     lines: [
