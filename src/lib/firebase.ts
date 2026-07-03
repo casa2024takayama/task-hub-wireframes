@@ -38,7 +38,7 @@ export const db = initializeFirestore(app, {
 })
 const googleProvider = new GoogleAuthProvider()
 
-/** signOut → signInWithPopup の間に匿名サインインが割り込まないようにする */
+/** ポップアップ中に匿名サインインが割り込まないようにする */
 let pendingGoogleSignIn = false
 
 /** このブラウザでまだ何もログインしていないときだけ匿名サインイン */
@@ -61,18 +61,19 @@ export async function linkGoogleToCurrentUser(): Promise<void> {
 }
 
 /**
- * いったんサインアウトして Google でログイン（同一 Google の UID に揃う → 他端末と同じデータ）
+ * Google でログイン（同一 Google の UID に揃う → 他端末と同じデータ）
  * 匿名のまま溜めた、この端末だけのデータはサーバーに無い可能性があるので注意。
+ *
+ * 事前の signOut は行わない。iOS Safari はタップから同期的に開いたウィンドウしか
+ * 許可せず、signOut を await するとジェスチャ文脈が切れてポップアップが黙って
+ * 遮断される（スマホで「途中で止まる」原因）。signInWithPopup は成功時点で
+ * 現セッションを新ユーザーに置き換えるため signOut は不要で、失敗時も匿名
+ * セッションがそのまま残る。
  */
 export async function signInWithGoogleReplacingSession(): Promise<void> {
   pendingGoogleSignIn = true
   try {
-    await signOut(auth)
     await signInWithPopup(auth, googleProvider)
-  } catch (e) {
-    pendingGoogleSignIn = false
-    await signInAnonymously(auth).catch(console.error)
-    throw e
   } finally {
     pendingGoogleSignIn = false
   }
