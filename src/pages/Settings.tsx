@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppStore } from '../store'
 import { parseKanbanReport } from '../lib/importKanbanReport'
+import { PRE_SHRINK_BACKUP_KEY } from '../lib/useFirestoreSync'
 import {
   auth,
   getAuthSummary,
@@ -14,6 +15,14 @@ const APP_VERSION =
   typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
+  {
+    version: '0.7.14',
+    date: '2026-07-03',
+    lines: [
+      'データ保護の緊急安全パッチ（デモデータ撤廃・同期の安全化）',
+      'クラウド上書き前に前回値を自動退避（data/backup）・激減時はローカルにも退避',
+    ],
+  },
   {
     version: '0.7.13',
     date: '2026-06-20',
@@ -218,6 +227,20 @@ export default function Settings() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [kanbanText, setKanbanText] = useState('')
+  // 同期の激減ガードが退避したデータ（あれば復元 UI を出す）
+  const [shrinkBackup, setShrinkBackup] = useState<{
+    stashedAt?: string
+    projects?: unknown[]
+    inbox?: unknown[]
+    unassignedTasks?: unknown[]
+  } | null>(() => {
+    try {
+      const raw = localStorage.getItem(PRE_SHRINK_BACKUP_KEY)
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  })
   const [message, setMessage] = useState<{ type: 'info' | 'error' | 'success'; text: string } | null>(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [authSummary, setAuthSummary] = useState(() => getAuthSummary(auth.currentUser))
@@ -260,6 +283,34 @@ export default function Settings() {
     } catch (err) {
       setMessage({ type: 'error', text: `JSON の読み込みに失敗：${err instanceof Error ? err.message : '不明なエラー'}` })
     }
+  }
+
+  function handleRestoreShrinkBackup() {
+    if (!shrinkBackup) return
+    const taskCount =
+      (shrinkBackup.projects ?? []).reduce(
+        (n: number, p) => n + ((p as { tasks?: unknown[] }).tasks?.length ?? 0),
+        0
+      ) + (shrinkBackup.unassignedTasks?.length ?? 0)
+    if (
+      !confirm(
+        `退避データ（${shrinkBackup.stashedAt ?? '日時不明'}・タスク${taskCount}件）で現在のデータを置き換えます。よろしいですか？\n復元後は自動でクラウドにも同期されます。`
+      )
+    )
+      return
+    const result = importData(shrinkBackup)
+    if (result.ok) {
+      setMessage({ type: 'success', text: '退避データを復元しました。同期ステータスが「同期済み」になるのを確認してください。' })
+    } else {
+      setMessage({ type: 'error', text: `復元に失敗：${result.error}` })
+    }
+  }
+
+  function handleDiscardShrinkBackup() {
+    if (!confirm('退避データを破棄します（元に戻せません）。よろしいですか？')) return
+    localStorage.removeItem(PRE_SHRINK_BACKUP_KEY)
+    setShrinkBackup(null)
+    setMessage({ type: 'info', text: '退避データを破棄しました' })
   }
 
   function handleKanbanImport() {
@@ -437,6 +488,31 @@ export default function Settings() {
       {/* データ管理 */}
       <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
         <h2 className="text-sm font-bold text-slate-700">データ管理</h2>
+
+        {shrinkBackup && (
+          <div className="rounded-lg bg-amber-50 border-2 border-amber-300 p-3 space-y-2">
+            <p className="text-sm font-bold text-amber-800">⚠ 同期で上書きされる前のデータが退避されています</p>
+            <p className="text-xs text-amber-900 leading-relaxed">
+              クラウドから受信したデータが極端に少なかったため、適用前のこの端末のデータを自動退避しました
+              （{shrinkBackup.stashedAt ? new Date(shrinkBackup.stashedAt).toLocaleString('ja-JP') : '日時不明'}）。
+              こちらが正しいデータなら「復元」を押してください。
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRestoreShrinkBackup}
+                className="bg-amber-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-amber-700"
+              >
+                退避データを復元
+              </button>
+              <button
+                onClick={handleDiscardShrinkBackup}
+                className="border border-slate-300 text-slate-500 text-xs px-3 py-1.5 rounded-lg hover:bg-slate-50"
+              >
+                破棄
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">

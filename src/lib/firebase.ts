@@ -10,8 +10,9 @@ import {
   type User,
 } from 'firebase/auth'
 import {
-  getFirestore,
-  enableIndexedDbPersistence,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   doc,
   getDoc,
   setDoc,
@@ -31,16 +32,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 export const firebaseApp = app
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+// オフラインキャッシュ（多タブ対応）。旧 enableIndexedDbPersistence は非推奨のため移行
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+})
 const googleProvider = new GoogleAuthProvider()
 
 /** signOut → signInWithPopup の間に匿名サインインが割り込まないようにする */
 let pendingGoogleSignIn = false
-
-// Firestore のオフラインキャッシュを有効化（オフライン時でも動作する）
-enableIndexedDbPersistence(db).catch(() => {
-  // 複数タブで開いた場合などは無視
-})
 
 /** このブラウザでまだ何もログインしていないときだけ匿名サインイン */
 export function ensureAnonymousSession(): void {
@@ -92,6 +91,11 @@ export function getAuthSummary(user: User | null): {
 /** ユーザーの Firestore ドキュメント参照を返す */
 export function userDataRef(uid: string) {
   return doc(db, 'users', uid, 'data', 'main')
+}
+
+/** 上書き前退避用のバックアップドキュメント（セッション初回保存の直前に main の旧値を保存） */
+export function userBackupRef(uid: string) {
+  return doc(db, 'users', uid, 'data', 'backup')
 }
 
 export { getDoc, setDoc, onSnapshot }

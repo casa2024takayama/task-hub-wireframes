@@ -103,123 +103,13 @@ function isExportPayload(v: unknown): v is ExportPayload {
   return Array.isArray(o.projects) && Array.isArray(o.inbox) && Array.isArray(o.unassignedTasks)
 }
 
-const DEMO_PROJECTS: Project[] = [
-  {
-    id: 'p1',
-    name: '外部イベント登壇',
-    type: 'one-time',
-    status: 'active',
-    dueDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0],
-    completedAt: null,
-    color: 'indigo',
-    resumeNote: '登壇資料のP12まで完成。次は事例スライドを追加する。',
-    tasks: [
-      {
-        id: 't1',
-        title: '登壇者プロフィールの確認返信',
-        size: 'small',
-        dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        projectId: 'p1',
-        done: false,
-        createdAt: new Date().toISOString(),
-        originalPaste: null,
-      },
-      {
-        id: 't2',
-        title: 'スライド最終確認',
-        size: 'large',
-        dueDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
-        projectId: 'p1',
-        done: false,
-        createdAt: new Date().toISOString(),
-        originalPaste: null,
-      },
-    ],
-    items: [{ id: 'i1', title: 'HDMIアダプタ', done: false }],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'p2',
-    name: '社内 Web リニューアル',
-    type: 'one-time',
-    status: 'active',
-    dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-    completedAt: null,
-    color: 'emerald',
-    resumeNote: 'デザインレビュー待ち。返信来たらHTML化フェーズへ。',
-    tasks: [
-      {
-        id: 't3',
-        title: 'デザインFBをSlackに返信',
-        size: 'small',
-        dueDate: new Date().toISOString().split('T')[0],
-        projectId: 'p2',
-        done: false,
-        createdAt: new Date().toISOString(),
-        originalPaste: null,
-      },
-    ],
-    items: [],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'p3',
-    name: 'X 週次投稿',
-    type: 'routine-weekly',
-    status: 'active',
-    dueDate: null,
-    completedAt: null,
-    color: 'amber',
-    resumeNote: '先週の反響が高かったテーマ：AI ツール活用。今週も継続。',
-    tasks: [
-      {
-        id: 't4',
-        title: '今週の投稿ネタ3本をメモ',
-        size: 'small',
-        dueDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-        projectId: 'p3',
-        done: false,
-        createdAt: new Date().toISOString(),
-        originalPaste: null,
-      },
-    ],
-    items: [],
-    createdAt: new Date().toISOString(),
-  },
-]
-
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      projects: DEMO_PROJECTS,
-      inbox: [
-        {
-          id: 'ib1',
-          rawText: '高山さんから：来週の勉強会でLT枠空いてるので5分で話してほしい。テーマ自由。返事は水曜日まで。',
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-        },
-        {
-          id: 'ib2',
-          rawText: '経費精算の領収書を経理に提出してください（今月末締め）',
-          createdAt: new Date(Date.now() - 7200000).toISOString(),
-        },
-        // AI自動振り分けデモ用サンプル（50文字以上）
-        {
-          id: 'ai-demo-1',
-          rawText: '【Web担当者へ】サイトリニューアルのトップページ案を今週金曜日17時までにデザイナーへフィードバックしてください。確認ポイントはファーストビューのコピーとCTAボタンの色です。',
-          createdAt: new Date(Date.now() - 300000).toISOString(),
-        },
-        {
-          id: 'ai-demo-2',
-          rawText: 'お疲れ様です。来週月曜の社内勉強会ですが、発表スライドを事前に共有フォルダへアップしておいてもらえますか？参加者が予習できるよう、木曜日中にお願いしたいです。',
-          createdAt: new Date(Date.now() - 600000).toISOString(),
-        },
-        {
-          id: 'ai-demo-3',
-          rawText: '高山様、先日ご依頼いただいたXアカウント向けの投稿文3パターンを作成しました。内容確認の上、どれを使うか今月25日までにご連絡ください。修正が必要な場合もお気軽にどうぞ。',
-          createdAt: new Date(Date.now() - 900000).toISOString(),
-        },
-      ],
+      // 初期状態は空。デモデータは撤廃（v0.7.14）:
+      // 「ローカルが空/新規のときデモが同期でクラウドを上書きする」事故の原因だったため。
+      projects: [],
+      inbox: [],
       unassignedTasks: [],
 
       addToInbox: (rawText) =>

@@ -377,6 +377,13 @@ export default function Dashboard() {
           </form>
         )}
 
+        {sortedActiveProjects.length === 0 && (
+          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500">
+            プロジェクトがまだありません。
+            <br />
+            「+ 新規プロジェクト」で作成するか、設定 → データ管理からバックアップをインポートしてください。
+          </div>
+        )}
         <div className="space-y-5">
           {PROJECT_GROUPS.map((group) => {
             const groupProjects = sortedActiveProjects.filter((p) => group.types.includes(p.type))
