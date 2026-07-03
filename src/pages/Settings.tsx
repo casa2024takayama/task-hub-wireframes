@@ -364,9 +364,9 @@ export default function Settings() {
     setAuthBusy(true)
     try {
       await linkGoogleToCurrentUser()
-      setMessage({ type: 'success', text: 'Google と連携しました。この端末のデータはクラウドに紐付け済みです。' })
+      setMessage({ type: 'success', text: 'アップロード同期を開始しました。この端末のデータがクラウドに保存され、以後は自動同期されます。' })
     } catch (e) {
-      setMessage({ type: 'error', text: `連携に失敗：${e instanceof Error ? e.message : '不明なエラー'}` })
+      setMessage({ type: 'error', text: `アップロード同期の開始に失敗：${e instanceof Error ? e.message : '不明なエラー'}` })
     } finally {
       setAuthBusy(false)
     }
@@ -377,9 +377,9 @@ export default function Settings() {
     setAuthBusy(true)
     try {
       await signInWithGoogleReplacingSession()
-      setMessage({ type: 'success', text: 'Google でログインしました。クラウド上のデータを読み込みます。' })
+      setMessage({ type: 'success', text: 'クラウドのデータをこの端末に読み込みました。以後は自動同期されます。' })
     } catch (e) {
-      setMessage({ type: 'error', text: `ログインに失敗：${e instanceof Error ? e.message : '不明なエラー'}` })
+      setMessage({ type: 'error', text: `ダウンロードに失敗：${e instanceof Error ? e.message : '不明なエラー'}` })
     } finally {
       setAuthBusy(false)
     }
@@ -411,12 +411,11 @@ export default function Settings() {
         <h2 className="text-sm font-bold text-slate-700">アカウント・クラウド同期</h2>
 
         <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 leading-relaxed">
-          <p className="font-semibold text-amber-800 mb-1">匿名ログインについて</p>
+          <p className="font-semibold text-amber-800 mb-1">クラウド同期を始める前に</p>
           <p>
-            匿名のままでは<strong>ブラウザごとに Firebase のユーザー ID が別</strong>になります。
-            また<strong>Firestore のクラウド同期は Google ログイン後のみ</strong>（セキュリティルールのため）で、
-            匿名時はヘッダーが「ローカルのみ」になります。PC とスマホで同じクラウドデータにするには、下の{' '}
-            <strong>Google 連携</strong> が必要です。
+            クラウド同期には <strong>Google ログイン</strong>が必要です。まだの端末のデータは
+            <strong>その端末の中だけ</strong>に保存され、ヘッダーに「ローカルのみ」と表示されます。
+            端末ごとに別 ID（匿名）になっているため、下のボタンでクラウドとつなぎます。
           </p>
         </div>
 
@@ -438,12 +437,15 @@ export default function Settings() {
           <p className="text-xs font-semibold text-slate-600">手順（推奨）</p>
           <ol className="text-xs text-slate-600 list-decimal list-inside space-y-1">
             <li>
-              <strong>最初に使う端末</strong>で「Google と連携（この端末のデータを紐付け）」
+              <strong>データが入っている端末</strong>で「⬆ アップロード」→ この端末の内容がクラウドの元データになります
             </li>
             <li>
-              <strong>もう一方の端末</strong>で「Google でログイン（他端末と同じデータ）」
+              <strong>他の端末</strong>で「⬇ ダウンロード」→ クラウドと同じ内容になります
             </li>
           </ol>
+          <p className="text-xs text-slate-400">
+            同期開始後は、どの端末で編集しても自動で双方向に同期されます。
+          </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
@@ -451,17 +453,19 @@ export default function Settings() {
             type="button"
             disabled={authBusy || !authSummary.isAnonymous}
             onClick={handleLinkGoogle}
-            className="flex-1 bg-indigo-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+            className="flex-1 bg-indigo-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-left"
           >
-            Google と連携（この端末のデータを紐付け）
+            <span className="block font-bold">⬆ この端末のデータをクラウドへアップロードして同期開始</span>
+            <span className="block text-[11px] text-indigo-200 mt-0.5">（Google アカウントと連携）</span>
           </button>
           <button
             type="button"
             disabled={authBusy || !authSummary.isAnonymous}
             onClick={() => setShowGoogleCloudConfirm(true)}
-            className="flex-1 bg-white border border-indigo-600 text-indigo-600 text-sm px-4 py-2 rounded-lg hover:bg-indigo-50 transition disabled:opacity-40"
+            className="flex-1 bg-white border border-indigo-600 text-indigo-600 text-sm px-4 py-2 rounded-lg hover:bg-indigo-50 transition disabled:opacity-40 text-left"
           >
-            Google でログイン（他端末と同じデータ）
+            <span className="block font-bold">⬇ クラウドのデータをこの端末へダウンロードして同期開始</span>
+            <span className="block text-[11px] text-indigo-400 mt-0.5">（Google でログイン）</span>
           </button>
         </div>
       </section>
@@ -639,11 +643,11 @@ export default function Settings() {
       {showGoogleCloudConfirm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 space-y-4">
-            <h3 className="text-base font-bold text-slate-800">Google でログインしますか？</h3>
+            <h3 className="text-base font-bold text-slate-800">クラウドのデータをダウンロードしますか？</h3>
             <p className="text-sm text-slate-600">
-              この端末だけの匿名データがまだクラウドに上がっていない場合、
-              <strong>ログイン後に表示がクラウド側の内容で上書き</strong>されることがあります。
-              必要なら先にエクスポートしてください。
+              この端末だけにあるデータ（まだクラウドにアップロードしていない分）は
+              <strong>画面から見えなくなります</strong>。
+              心配な場合は先に「データ管理 → エクスポート」で JSON を保存してください。
             </p>
             <div className="flex justify-end gap-2">
               <button
@@ -658,7 +662,7 @@ export default function Settings() {
                 onClick={handleGoogleCloudLogin}
                 className="bg-indigo-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-indigo-700"
               >
-                ログインする
+                ダウンロードする
               </button>
             </div>
           </div>
