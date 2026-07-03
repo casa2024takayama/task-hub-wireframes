@@ -6,12 +6,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // アプリの同期ドキュメント（src/lib/firebase.ts の userDataRef と一致）
+    // アプリの同期ドキュメント（src/lib/firebase.ts の userDataRef / userBackupRef と一致）
     // Google ログイン済み（匿名トークンは不可）かつ自分の UID のパスのみ
+    // 'backup' は v0.7.14 の上書き前退避（useFirestoreSync の userBackupRef）用
     match /users/{userId}/data/{docId} {
       allow read, write: if request.auth != null
         && request.auth.uid == userId
-        && docId == 'main'
+        && docId in ['main', 'backup']
         && request.auth.token.firebase.sign_in_provider == 'google.com';
     }
 
