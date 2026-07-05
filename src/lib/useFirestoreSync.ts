@@ -145,6 +145,10 @@ export function useFirestoreSync() {
 
       unsubSnapshotRef.current = onSnapshot(
         userDataRef(uid),
+        // includeMetadataChanges が無いと「キャッシュと同内容のサーバー確定」が
+        // メタデータのみの変化として握りつぶされ、fromCache=false が永遠に来ない
+        // （＝接続中のまま・アップローダ起動せず）。v0.7.14 の安全設計はこれが前提
+        { includeMetadataChanges: true },
         (docSnap) => {
           const fromCache = docSnap.metadata.fromCache
 

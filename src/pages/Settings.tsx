@@ -16,6 +16,28 @@ const APP_VERSION =
 
 const RECENT_CHANGES: { version: string; date: string; lines: string[] }[] = [
   {
+    version: '0.7.17',
+    date: '2026-07-05',
+    lines: [
+      '同期アイコンが「接続中…」（グレー）のまま止まり同期が始まらない問題を修正',
+      '（キャッシュと同内容のサーバー確認が通知されず、同期開始の合図を受け取れていなかった）',
+    ],
+  },
+  {
+    version: '0.7.16',
+    date: '2026-07-04',
+    lines: [
+      'iOS Safari で「⬇ ダウンロードして同期開始」の Google ログインが途中で止まる問題を修正',
+    ],
+  },
+  {
+    version: '0.7.15',
+    date: '2026-07-04',
+    lines: [
+      'クラウド同期のボタン文言をアップロード／ダウンロードの方向で表現',
+    ],
+  },
+  {
     version: '0.7.14',
     date: '2026-07-03',
     lines: [
